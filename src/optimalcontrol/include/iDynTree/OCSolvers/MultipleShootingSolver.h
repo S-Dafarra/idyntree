@@ -15,6 +15,8 @@
 
 #include "iDynTree/OptimalControlSolver.h"
 
+#include <memory>
+
 namespace iDynTree {
     namespace optimalcontrol {
 
@@ -29,7 +31,9 @@ namespace iDynTree {
         : public OptimalControlSolver {
 
         public:
-            MultipleShootingSolver(OptimalControlProblem&);
+            MultipleShootingSolver(const std::shared_ptr<OptimalControlProblem>& ocProblem);
+
+            MultipleShootingSolver(const MultipleShootingSolver& other) = delete;
 
             // FIXME: These two cannot be used as VectorDynTree
             // as they are trajectories, not single vectors

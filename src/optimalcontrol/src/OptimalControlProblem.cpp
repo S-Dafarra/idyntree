@@ -59,6 +59,7 @@ namespace iDynTree {
             MatrixDynSize costStateHessianBuffer, costControlHessianBuffer, costMixedHessianBuffer;
             VectorDynSize stateLowerBound, stateUpperBound, controlLowerBound, controlUpperBound; //if they are empty is like there is no bound
             std::vector<std::string> mayerCostnames;
+            std::vector<TimeRange> constraintsTimeRanges, costTimeRanges;
         };
 
 
@@ -123,7 +124,7 @@ namespace iDynTree {
             return true;
         }
 
-        const std::weak_ptr<const DynamicalSystem> OptimalControlProblem::dynamicalSystem() const
+        const std::weak_ptr<DynamicalSystem> OptimalControlProblem::dynamicalSystem() const
         {
             return m_pimpl->dynamicalSystem;
         }
@@ -265,6 +266,25 @@ namespace iDynTree {
             return output;
         }
 
+        std::vector<TimeRange> &OptimalControlProblem::getConstraintsTimeRanges() const
+        {
+            unsigned int nc = countConstraints();
+
+            if (m_pimpl->constraintsTimeRanges.size() != nc)
+                m_pimpl->constraintsTimeRanges.resize(nc);
+
+            size_t index = 0;
+
+            for (auto group : m_pimpl->constraintsGroups){
+                std::vector<TimeRange> &groupTimeRanges = group.second.group_ptr->getTimeRanges();
+                for (size_t i = 0; i < groupTimeRanges.size(); ++i){
+                    m_pimpl->constraintsTimeRanges[index] = groupTimeRanges[i];
+                    ++index;
+                }
+            }
+            return m_pimpl->constraintsTimeRanges;
+        }
+
         bool OptimalControlProblem::addMayerTerm(double weight, std::shared_ptr<Cost> cost)
         {
             if (!cost){
@@ -393,6 +413,19 @@ namespace iDynTree {
             errorMsg << "Failed to remove cost named "<<name<< std::endl;
             reportError("OptimalControlProblem", "removeCost", errorMsg.str().c_str());
             return false;
+        }
+
+        std::vector<TimeRange> &OptimalControlProblem::getCostsTimeRanges() const
+        {
+            if (m_pimpl->costTimeRanges.size() != m_pimpl->costs.size())
+                m_pimpl->costTimeRanges.resize(m_pimpl->costs.size());
+
+            size_t i = 0;
+            for (auto c : m_pimpl->costs){
+                m_pimpl->costTimeRanges[i] = c.second.timeRange;
+                ++i;
+            }
+            return m_pimpl->costTimeRanges;
         }
 
         bool OptimalControlProblem::setStateBoxConstraints(const VectorDynSize &minState, const VectorDynSize &maxState)

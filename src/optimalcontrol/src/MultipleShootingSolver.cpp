@@ -30,10 +30,10 @@ namespace iDynTree {
         // MARK: Private implementation
         class MultipleShootingSolver::MultipleShootingSolverPimpl {
         public:
-            MultipleShootingSolverPimpl(OptimalControlProblem& problem)
+            MultipleShootingSolverPimpl(const std::shared_ptr<OptimalControlProblem> problem)
             : controlProblem(problem) {}
 
-            OptimalControlProblem& controlProblem;
+            std::shared_ptr<OptimalControlProblem> controlProblem;
             iDynTree::VectorDynSize lastSolution;
 
             iDynTree::VectorDynSize optimisationVariable;
@@ -44,9 +44,9 @@ namespace iDynTree {
 
         // MARK: Class implementation
 
-        MultipleShootingSolver::MultipleShootingSolver(OptimalControlProblem& problem)
-        : OptimalControlSolver(problem)
-        , m_pimpl(new MultipleShootingSolverPimpl(problem))
+        MultipleShootingSolver::MultipleShootingSolver(const std::shared_ptr<OptimalControlProblem> &ocProblem)
+        : OptimalControlSolver(ocProblem)
+        , m_pimpl(new MultipleShootingSolverPimpl(ocProblem))
         {
             assert(m_pimpl);
         }

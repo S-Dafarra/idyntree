@@ -52,6 +52,8 @@ namespace iDynTree {
 
             bool getTimeRange(const std::string& name, TimeRange& timeRange);
 
+            std::vector<TimeRange>& getTimeRanges() const;
+
             bool isFeasibilePoint(double time,
                                   const VectorDynSize& state,
                                   const VectorDynSize& control);

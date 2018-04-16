@@ -49,7 +49,7 @@ namespace iDynTree {
             double finalTime() const;
 
             bool setDynamicalSystemConstraint(std::shared_ptr<DynamicalSystem> dynamicalSystem);
-            const std::weak_ptr<const iDynTree::optimalcontrol::DynamicalSystem> dynamicalSystem() const;
+            const std::weak_ptr<DynamicalSystem> dynamicalSystem() const;
 
             bool addGroupOfConstraints(std::shared_ptr<ConstraintsGroup> groupOfConstraints); //to be used when the constraints applies only for a time interval
 
@@ -61,6 +61,8 @@ namespace iDynTree {
             unsigned int getConstraintsDimension() const;
             const std::vector<std::string> listConstraints() const;
             const std::vector<std::string> listGroups() const; //the i-th entry of the list contains the i-th constraint displayed with listConstraints()
+
+            std::vector<TimeRange>& getConstraintsTimeRanges() const;
 
             // Cost can be:
             // Mayer term
@@ -81,6 +83,8 @@ namespace iDynTree {
             bool updateCostTimeRange(const std::string& name, const TimeRange& newTimeRange);
 
             bool removeCost(const std::string& name);
+
+            std::vector<TimeRange>& getCostsTimeRanges() const;
 
             bool setStateBoxConstraints(const iDynTree::VectorDynSize& minState,
                                         const iDynTree::VectorDynSize& maxState);

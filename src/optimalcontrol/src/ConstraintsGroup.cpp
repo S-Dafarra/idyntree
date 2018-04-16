@@ -45,6 +45,7 @@ namespace optimalcontrol {
             std::vector< TimedConstraint_ptr > orderedIntervals;
             std::string name;
             unsigned int maxConstraintSize;
+            std::vector<TimeRange> timeRanges;
 
             std::vector< TimedConstraint_ptr >::reverse_iterator findActiveConstraint(double time){
                 return std::find_if(orderedIntervals.rbegin(),
@@ -200,6 +201,19 @@ namespace optimalcontrol {
 
             timeRange = constraintIterator->second->timeRange;
             return true;
+        }
+
+        std::vector<TimeRange>& ConstraintsGroup::getTimeRanges() const
+        {
+            if (m_pimpl->timeRanges.size() != numberOfConstraints())
+                m_pimpl->timeRanges.resize(numberOfConstraints());
+
+            size_t i=0;
+            for (auto constraint : m_pimpl->group){
+                m_pimpl->timeRanges[i] = constraint.second->timeRange;
+                ++i;
+            }
+            return m_pimpl->timeRanges;
         }
 
         bool ConstraintsGroup::isFeasibilePoint(double time, const VectorDynSize &state, const VectorDynSize &control)
