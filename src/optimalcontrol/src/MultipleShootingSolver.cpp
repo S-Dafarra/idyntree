@@ -11,9 +11,11 @@
  */
 
 #include "iDynTree/OCSolvers/MultipleShootingSolver.h"
+#include "iDynTree/OCMultipleShootingInstance.h"
 
 #include "iDynTree/OptimalControlProblem.h"
 #include "iDynTree/DynamicalSystem.h"
+#include "iDynTree/Integrator.h"
 
 #include <iDynTree/Core/VectorDynSize.h>
 
@@ -37,9 +39,6 @@ namespace iDynTree {
             iDynTree::VectorDynSize lastSolution;
 
             iDynTree::VectorDynSize optimisationVariable;
-
-
-
         };
 
         // MARK: Class implementation
@@ -47,8 +46,20 @@ namespace iDynTree {
         MultipleShootingSolver::MultipleShootingSolver(const std::shared_ptr<OptimalControlProblem> &ocProblem)
         : OptimalControlSolver(ocProblem)
         , m_pimpl(new MultipleShootingSolverPimpl(ocProblem))
+        , m_instance(std::make_shared<OCMultipleShootingInstance>())
         {
             assert(m_pimpl);
+            m_instance->setOptimalControlProblem(ocProblem);
+        }
+
+        bool MultipleShootingSolver::setStepSizeBounds(const double minStepSize, const double maxStepsize)
+        {
+            return m_instance->setStepSizeBounds(minStepSize, maxStepsize);
+        }
+
+        bool MultipleShootingSolver::setIntegrator(const std::shared_ptr<Integrator> integrationMethod)
+        {
+            return m_instance->setIntegrator(integrationMethod);
         }
 
         void MultipleShootingSolver::setInitialGuess(const iDynTree::VectorDynSize& initialGuess)

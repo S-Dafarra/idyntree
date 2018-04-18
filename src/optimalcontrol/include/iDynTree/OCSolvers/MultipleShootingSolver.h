@@ -21,7 +21,12 @@ namespace iDynTree {
     namespace optimalcontrol {
 
         class OptimalControlProblem;
+        namespace integrators {
+            class Integrator;
+        }
+        using namespace integrators;
 
+        class OCMultipleShootingInstance;
         /**
          * @warning This class is still in active development, and so API interface can change between iDynTree versions.
          * \ingroup iDynTreeExperimental
@@ -34,6 +39,11 @@ namespace iDynTree {
             MultipleShootingSolver(const std::shared_ptr<OptimalControlProblem>& ocProblem);
 
             MultipleShootingSolver(const MultipleShootingSolver& other) = delete;
+
+            bool setStepSizeBounds(const double minStepSize, const double maxStepsize);
+
+            bool setIntegrator(const std::shared_ptr<Integrator> integrationMethod);
+
 
             // FIXME: These two cannot be used as VectorDynTree
             // as they are trajectories, not single vectors
@@ -49,7 +59,7 @@ namespace iDynTree {
             class MultipleShootingSolverPimpl;
             MultipleShootingSolverPimpl* m_pimpl;
 
-
+            std::shared_ptr<OCMultipleShootingInstance> m_instance;
         };
 
     }

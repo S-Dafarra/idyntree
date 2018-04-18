@@ -31,6 +31,11 @@ namespace iDynTree {
         return false;
     }
 
+    void OptimizationInstance::reset()
+    {
+
+    }
+
     bool OptimizationInstance::getInfo(unsigned int &numberOfVariables, unsigned int &numberOfConstraints,
                                            unsigned int &numberOfNonZerosConstraintsJacobian, unsigned int &numberOfNonZerosHessian)
         {

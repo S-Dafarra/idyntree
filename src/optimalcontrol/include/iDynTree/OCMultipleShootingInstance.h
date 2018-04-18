@@ -48,7 +48,11 @@ namespace iDynTree {
 
             bool setIntegrator(const std::shared_ptr<Integrator> integrationMethod);
 
+            bool setStepSizeBounds(const double minStepSize, const double maxStepsize);
+
             virtual bool prepare() override;
+
+            virtual void reset() override;
 
             virtual bool getInfo(unsigned int& numberOfVariables, unsigned int& numberOfConstraints,
                                  unsigned int& numberOfNonZerosConstraintsJacobian, unsigned int& numberOfNonZerosHessian) override;

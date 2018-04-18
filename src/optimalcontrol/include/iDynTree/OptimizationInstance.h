@@ -36,6 +36,8 @@ namespace iDynTree {
 
             virtual bool prepare();
 
+            virtual void reset();
+
             virtual bool getInfo(unsigned int& numberOfVariables, unsigned int& numberOfConstraints,
                                  unsigned int& numberOfNonZerosConstraintsJacobian, unsigned int& numberOfNonZerosHessian);
 
