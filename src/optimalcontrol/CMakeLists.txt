@@ -33,8 +33,7 @@ set(PUBLIC_HEADERS include/iDynTree/OptimalControl.h
                    include/iDynTree/Controller.h
                    include/iDynTree/TimeRange.h
                    include/iDynTree/ConstraintsGroup.h
-                   include/iDynTree/OptimizationInstance.h
-                   include/iDynTree/OCMultipleShootingInstance.h)
+                   include/iDynTree/OptimizationProblem.h)
 set(INTEGRATORS_PUBLIC_HEADERS include/iDynTree/Integrators/FixedStepIntegrator.h
                                include/iDynTree/Integrators/RK4.h
                                include/iDynTree/Integrators/ImplicitTrapezoidal.h)
@@ -60,8 +59,7 @@ set(SOURCES src/DynamicalSystem.cpp
             src/ImplicitTrapezoidal.cpp
             src/TimeRange.cpp
             src/ConstraintsGroup.cpp
-            src/OptimizationInstance.cpp
-            src/OCMultipleShootingInstance.cpp)
+            src/OptimizationProblem.cpp)
 
 add_library(${libraryname} ${PUBLIC_HEADERS} ${INTEGRATORS_PUBLIC_HEADERS} ${SOURCES})
 target_include_directories(${libraryname} SYSTEM PUBLIC ${EIGEN3_INCLUDE_DIR})

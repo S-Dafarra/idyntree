@@ -14,23 +14,72 @@
 #define IDYNTREE_OPTIMALCONTROL_MULTIPLESHOOTINGSOLVER_H
 
 #include "iDynTree/OptimalControlSolver.h"
+#include "iDynTree/OptimizationProblem.h"
+#include "iDynTree/Core/SparseMatrix.h"
 
 #include <memory>
 
 namespace iDynTree {
+
+    class VectorDynSize;
+
     namespace optimalcontrol {
 
         class OptimalControlProblem;
+
         namespace integrators {
             class Integrator;
         }
         using namespace integrators;
 
-        class OCMultipleShootingInstance;
         /**
          * @warning This class is still in active development, and so API interface can change between iDynTree versions.
          * \ingroup iDynTreeExperimental
          */
+
+        class MultipleShootingTranscription : public OptimizationProblem {
+        public:
+            MultipleShootingTranscription();
+
+            MultipleShootingTranscription(const std::shared_ptr<OptimalControlProblem> problem, const std::shared_ptr<Integrator> integrationMethod);
+
+            MultipleShootingTranscription(const MultipleShootingTranscription& other) = delete;
+
+            virtual ~MultipleShootingTranscription() override;
+
+            bool setOptimalControlProblem(const std::shared_ptr<OptimalControlProblem> problem);
+
+            bool setIntegrator(const std::shared_ptr<Integrator> integrationMethod);
+
+            bool setStepSizeBounds(const double minStepSize, const double maxStepsize);
+
+            virtual bool prepare() override;
+
+            virtual void reset() override;
+
+            virtual bool getInfo(unsigned int& numberOfVariables, unsigned int& numberOfConstraints,
+                                 unsigned int& numberOfNonZerosConstraintsJacobian, unsigned int& numberOfNonZerosHessian) override;
+
+//            bool getBoundsInfo(VectorDynSize& variablesLowerBounds, VectorDynSize& variableUpperBounds,
+//                               VectorDynSize& constraintsLowerBounds, VectorDynSize& constraintsUpperBounds,
+//                               double infinity = 1e19) override;
+
+//            bool evaluateCostFunction(const VectorDynSize& variables, double& costValue) override;
+
+//            bool evaluateCostGradient(const VectorDynSize& variables, VectorDynSize& gradient) override;
+
+//            bool evaluateConstraints(const VectorDynSize& variables, VectorDynSize& constraints) override;
+
+//            bool evaluateConstraintsJacobian(const VectorDynSize& variables, SparseMatrix& jacobian) override;
+
+            virtual bool evaluateHessian(const VectorDynSize& variables, double costMultiplier,
+                                         const VectorDynSize& constraintsMultipliers, SparseMatrix<RowMajor>& hessian) override;
+
+        private:
+            class MultipleShootingTranscriptionPimpl;
+            MultipleShootingTranscriptionPimpl *m_pimpl;
+        };
+
 
         class MultipleShootingSolver
         : public OptimalControlSolver {
@@ -59,7 +108,7 @@ namespace iDynTree {
             class MultipleShootingSolverPimpl;
             MultipleShootingSolverPimpl* m_pimpl;
 
-            std::shared_ptr<OCMultipleShootingInstance> m_instance;
+            std::shared_ptr<MultipleShootingTranscription> m_transcription;
         };
 
     }

@@ -75,7 +75,7 @@ namespace optimalcontrol {
 
 
 
-    protected:
+    private:
         // TODO: does it make sense to have members in this abstrac class?
         size_t m_stateSize;
         size_t m_controlSize;

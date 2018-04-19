@@ -10,7 +10,7 @@
  * - ADRL Control Toolbox (https://adrlab.bitbucket.io/ct/ct_doc/doc/html/index.html)
  */
 
-#ifndef IDYNTREE_OPTIMALCONTROL_OPTIMIZATIONINSTANCE_H
+#ifndef IDYNTREE_OPTIMALCONTROL_OPTIMIZATIONPROBLEM_H
 #define IDYNTREE_OPTIMALCONTROL_OPTIMIZATIONINSTANCE_H
 
 #include <iDynTree/Core/SparseMatrix.h>
@@ -26,13 +26,13 @@ namespace iDynTree {
          * \ingroup iDynTreeExperimental
          */
 
-        class OptimizationInstance {
+        class OptimizationProblem {
 
         public:
 
-            OptimizationInstance();
+            OptimizationProblem();
 
-            virtual ~OptimizationInstance();
+            virtual ~OptimizationProblem();
 
             virtual bool prepare();
 

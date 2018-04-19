@@ -10,40 +10,40 @@
  * - ADRL Control Toolbox (https://adrlab.bitbucket.io/ct/ct_doc/doc/html/index.html)
  */
 
-#include "iDynTree/OptimizationInstance.h"
+#include "iDynTree/OptimizationProblem.h"
 #include "iDynTree/Core/Utils.h"
 
 namespace iDynTree {
 
     namespace optimalcontrol {
 
-    OptimizationInstance::OptimizationInstance()
+    OptimizationProblem::OptimizationProblem()
     {
     }
 
-    OptimizationInstance::~OptimizationInstance()
+    OptimizationProblem::~OptimizationProblem()
     {
     }
 
-    bool OptimizationInstance::prepare()
+    bool OptimizationProblem::prepare()
     {
         reportError("OptimizationInstance", "prepare", "Method not implemented.");
         return false;
     }
 
-    void OptimizationInstance::reset()
+    void OptimizationProblem::reset()
     {
 
     }
 
-    bool OptimizationInstance::getInfo(unsigned int &numberOfVariables, unsigned int &numberOfConstraints,
+    bool OptimizationProblem::getInfo(unsigned int &numberOfVariables, unsigned int &numberOfConstraints,
                                            unsigned int &numberOfNonZerosConstraintsJacobian, unsigned int &numberOfNonZerosHessian)
         {
             reportError("OptimizationInstance", "getInfo", "Method not implemented.");
             return false;
         }
 
-        bool OptimizationInstance::getBoundsInfo(VectorDynSize &variablesLowerBounds, VectorDynSize &variableUpperBounds,
+        bool OptimizationProblem::getBoundsInfo(VectorDynSize &variablesLowerBounds, VectorDynSize &variableUpperBounds,
                                                  VectorDynSize &constraintsLowerBounds, VectorDynSize &constraintsUpperBounds,
                                                  double infinity /* = 1e19*/)
         {
@@ -51,31 +51,31 @@ namespace iDynTree {
             return false;
         }
 
-        bool OptimizationInstance::evaluateCostFunction(const VectorDynSize &variables, double &costValue)
+        bool OptimizationProblem::evaluateCostFunction(const VectorDynSize &variables, double &costValue)
         {
             reportError("OptimizationInstance", "evaluateCostFunction", "Method not implemented.");
             return false;
         }
 
-        bool OptimizationInstance::evaluateCostGradient(const VectorDynSize &variables, VectorDynSize &gradient)
+        bool OptimizationProblem::evaluateCostGradient(const VectorDynSize &variables, VectorDynSize &gradient)
         {
             reportError("OptimizationInstance", "evaluateCostGradient", "Method not implemented.");
             return false;
         }
 
-        bool OptimizationInstance::evaluateConstraints(const VectorDynSize &variables, VectorDynSize &constraints)
+        bool OptimizationProblem::evaluateConstraints(const VectorDynSize &variables, VectorDynSize &constraints)
         {
             reportError("OptimizationInstance", "evaluateConstraints", "Method not implemented.");
             return false;
         }
 
-        bool OptimizationInstance::evaluateConstraintsJacobian(const VectorDynSize &variables, SparseMatrix<RowMajor> &jacobian)
+        bool OptimizationProblem::evaluateConstraintsJacobian(const VectorDynSize &variables, SparseMatrix<RowMajor> &jacobian)
         {
             reportError("OptimizationInstance", "evaluateConstraintsJacobian", "Method not implemented.");
             return false;
         }
 
-        bool OptimizationInstance::evaluateHessian(const VectorDynSize &variables, double costMultiplier,
+        bool OptimizationProblem::evaluateHessian(const VectorDynSize &variables, double costMultiplier,
                                                    const VectorDynSize &constraintsMultipliers,  SparseMatrix<RowMajor> &hessian)
         {
             reportError("OptimizationInstance", "evaluateHessian", "Method not implemented.");
