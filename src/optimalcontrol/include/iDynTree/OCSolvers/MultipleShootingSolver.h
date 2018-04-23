@@ -38,20 +38,37 @@ namespace iDynTree {
          */
 
         class MultipleShootingTranscription : public OptimizationProblem {
-        public:
+
+            friend class MultipleShootingSolver;
+
             MultipleShootingTranscription();
 
             MultipleShootingTranscription(const std::shared_ptr<OptimalControlProblem> problem, const std::shared_ptr<Integrator> integrationMethod);
 
             MultipleShootingTranscription(const MultipleShootingTranscription& other) = delete;
 
-            virtual ~MultipleShootingTranscription() override;
+            size_t setControlMeshPoints();
+
+            bool setMeshPoints();
 
             bool setOptimalControlProblem(const std::shared_ptr<OptimalControlProblem> problem);
 
             bool setIntegrator(const std::shared_ptr<Integrator> integrationMethod);
 
             bool setStepSizeBounds(const double minStepSize, const double maxStepsize);
+
+            bool setControlPeriod(double period);
+
+            bool setAdditionalStateMeshPoints(const std::vector<double>& stateMeshes);
+
+            bool setAdditionalControlMeshPoints(const std::vector<double>& controlMeshes);
+
+            class MultipleShootingTranscriptionPimpl;
+            MultipleShootingTranscriptionPimpl *m_pimpl;
+
+        public:
+
+            virtual ~MultipleShootingTranscription() override;
 
             virtual bool prepare() override;
 
@@ -72,27 +89,27 @@ namespace iDynTree {
 
 //            bool evaluateConstraintsJacobian(const VectorDynSize& variables, SparseMatrix& jacobian) override;
 
-            virtual bool evaluateHessian(const VectorDynSize& variables, double costMultiplier,
-                                         const VectorDynSize& constraintsMultipliers, SparseMatrix<RowMajor>& hessian) override;
-
-        private:
-            class MultipleShootingTranscriptionPimpl;
-            MultipleShootingTranscriptionPimpl *m_pimpl;
+//            virtual bool evaluateHessian(const VectorDynSize& variables, double costMultiplier,
+//                                         const VectorDynSize& constraintsMultipliers, SparseMatrix<RowMajor>& hessian) override;
         };
 
 
-        class MultipleShootingSolver
-        : public OptimalControlSolver {
+        class MultipleShootingSolver : public OptimalControlSolver {
 
         public:
             MultipleShootingSolver(const std::shared_ptr<OptimalControlProblem>& ocProblem);
 
             MultipleShootingSolver(const MultipleShootingSolver& other) = delete;
 
-            bool setStepSizeBounds(const double minStepSize, const double maxStepsize);
+            bool setStepSizeBounds(double minStepSize, double maxStepsize);
 
             bool setIntegrator(const std::shared_ptr<Integrator> integrationMethod);
 
+            bool setControlPeriod(double period);
+
+            bool setAdditionalStateMeshPoints(const std::vector<double>& stateMeshes);
+
+            bool setAdditionalControlMeshPoints(const std::vector<double>& controlMeshes);
 
             // FIXME: These two cannot be used as VectorDynTree
             // as they are trajectories, not single vectors

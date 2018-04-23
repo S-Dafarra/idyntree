@@ -50,16 +50,17 @@ namespace iDynTree {
                                           VectorDynSize& upperBoundsMultipliersGuess,
                                           VectorDynSize& constraintsMultiplierGuess); */ //This method should be part of the solver interface
 
-            virtual bool evaluateCostFunction(const VectorDynSize& variables, double& costValue);
+            virtual bool setVariables(const VectorDynSize& variables);
 
-            virtual bool evaluateCostGradient(const VectorDynSize& variables, VectorDynSize& gradient);
+            virtual bool evaluateCostFunction(double& costValue);
 
-            virtual bool evaluateConstraints(const VectorDynSize& variables, VectorDynSize& constraints);
+            virtual bool evaluateCostGradient(VectorDynSize& gradient);
 
-            virtual bool evaluateConstraintsJacobian(const VectorDynSize& variables, SparseMatrix<RowMajor>& jacobian);
+            virtual bool evaluateConstraints(VectorDynSize& constraints);
 
-            virtual bool evaluateHessian(const VectorDynSize& variables, double costMultiplier,
-                                         const VectorDynSize& constraintsMultipliers, SparseMatrix<RowMajor>& hessian);
+            virtual bool evaluateConstraintsJacobian(SparseMatrix<RowMajor>& jacobian);
+
+            virtual bool evaluateHessian(double costMultiplier, const VectorDynSize& constraintsMultipliers, SparseMatrix<RowMajor>& hessian);
 
             //virtual bool getSolution(); this method should be part of the solver interface (?)
         };

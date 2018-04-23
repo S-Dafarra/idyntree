@@ -51,31 +51,37 @@ namespace iDynTree {
             return false;
         }
 
-        bool OptimizationProblem::evaluateCostFunction(const VectorDynSize &variables, double &costValue)
+        bool OptimizationProblem::setVariables(const VectorDynSize &variables)
+        {
+            reportError("OptimizationInstance", "setVariables", "Method not implemented.");
+            return false;
+        }
+
+        bool OptimizationProblem::evaluateCostFunction(double &costValue)
         {
             reportError("OptimizationInstance", "evaluateCostFunction", "Method not implemented.");
             return false;
         }
 
-        bool OptimizationProblem::evaluateCostGradient(const VectorDynSize &variables, VectorDynSize &gradient)
+        bool OptimizationProblem::evaluateCostGradient(VectorDynSize &gradient)
         {
             reportError("OptimizationInstance", "evaluateCostGradient", "Method not implemented.");
             return false;
         }
 
-        bool OptimizationProblem::evaluateConstraints(const VectorDynSize &variables, VectorDynSize &constraints)
+        bool OptimizationProblem::evaluateConstraints(VectorDynSize &constraints)
         {
             reportError("OptimizationInstance", "evaluateConstraints", "Method not implemented.");
             return false;
         }
 
-        bool OptimizationProblem::evaluateConstraintsJacobian(const VectorDynSize &variables, SparseMatrix<RowMajor> &jacobian)
+        bool OptimizationProblem::evaluateConstraintsJacobian(SparseMatrix<RowMajor> &jacobian)
         {
             reportError("OptimizationInstance", "evaluateConstraintsJacobian", "Method not implemented.");
             return false;
         }
 
-        bool OptimizationProblem::evaluateHessian(const VectorDynSize &variables, double costMultiplier,
+        bool OptimizationProblem::evaluateHessian(double costMultiplier,
                                                    const VectorDynSize &constraintsMultipliers,  SparseMatrix<RowMajor> &hessian)
         {
             reportError("OptimizationInstance", "evaluateHessian", "Method not implemented.");

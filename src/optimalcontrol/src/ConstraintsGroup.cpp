@@ -185,6 +185,26 @@ namespace optimalcontrol {
                 reportError("ConstraintsGroup", "removeConstraint", errorMsg.str().c_str());
                 return false;
             }
+
+            bool found = false;
+            std::vector<TimedConstraint_ptr>::iterator it = m_pimpl->orderedIntervals.begin();
+            while ((!found) && (it != m_pimpl->orderedIntervals.end())){
+                if (it->get()->constraint->name() == name){
+                    m_pimpl->orderedIntervals.erase(it);
+                    found = true;
+                } else{
+                    it++;
+                }
+            }
+
+            if(!found){
+                std::ostringstream errorMsg;
+                errorMsg << "Unable to find constraint named "<<name<< "on the ordered vector. This is most likely a bug." << std::endl;
+                reportError("ConstraintsGroup", "removeConstraint", errorMsg.str().c_str());
+                return false;
+            }
+
+            std::sort(m_pimpl->orderedIntervals.begin(), m_pimpl->orderedIntervals.end(), [](const TimedConstraint_ptr&a, const TimedConstraint_ptr&b) { return a->timeRange < b->timeRange;}); //reorder the vector
             return true;
         }
 
