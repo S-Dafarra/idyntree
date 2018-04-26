@@ -83,15 +83,15 @@ namespace iDynTree {
 
             virtual bool getConstraintsInfo(unsigned int& numberOfConstraints, VectorDynSize& constraintsLowerBounds, VectorDynSize& constraintsUpperBounds) override;
 
-//            virtual bool getVariablesUpperBound(VectorDynSize& variablesUpperBound);
+            virtual bool getVariablesUpperBound(VectorDynSize& variablesUpperBound) override;
 
-//            virtual bool getVariablesLowerBound(VectorDynSize& variablesLowerBound);
+            virtual bool getVariablesLowerBound(VectorDynSize& variablesLowerBound) override;
 
-//            virtual bool getConstraintsJacobianInfo(std::vector<size_t>& nonZeroElementRows, std::vector<size_t>& nonZeroElementColumns);
+            virtual bool getConstraintsJacobianInfo(std::vector<size_t>& nonZeroElementRows, std::vector<size_t>& nonZeroElementColumns) override;
 
-//            virtual bool getHessianInfo(std::vector<size_t>& nonZeroElementRows, std::vector<size_t>& nonZeroElementColumns);
+            virtual bool getHessianInfo(std::vector<size_t>& nonZeroElementRows, std::vector<size_t>& nonZeroElementColumns) override;
 
-//            virtual bool setVariables(const VectorDynSize& variables);
+            virtual bool setVariables(const VectorDynSize& variables) override;
 
 //            virtual bool evaluateCostFunction(double& costValue);
 

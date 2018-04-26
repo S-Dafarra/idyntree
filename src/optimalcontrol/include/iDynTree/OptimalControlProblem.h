@@ -86,10 +86,27 @@ namespace iDynTree {
 
             std::vector<TimeRange>& getCostsTimeRanges() const;
 
+            bool setStateLowerBound(const VectorDynSize& minState);
+
+            bool setStateUpperBound(const VectorDynSize& maxState);
+
+            bool setControlLowerBound(const VectorDynSize& minControl);
+
+            bool setControlUpperBound(const VectorDynSize& maxControl);
+
             bool setStateBoxConstraints(const VectorDynSize& minState,
                                         const VectorDynSize& maxState);
+
             bool setControlBoxConstraints(const VectorDynSize& minControl,
                                           const VectorDynSize& maxControl);
+
+            bool getStateLowerBound(VectorDynSize& minState) const;  //return false if the corresponding bound is not set
+
+            bool getStateUpperBound(VectorDynSize& maxState) const;  //return false if the corresponding bound is not set
+
+            bool getControlLowerBound(VectorDynSize& minControl) const;  //return false if the corresponding bound is not set
+
+            bool getControlUpperBound(VectorDynSize& maxControl) const;  //return false if the corresponding bound is not set
 
             bool costsEvaluation(double time, const VectorDynSize& state, const VectorDynSize& control, double& costValue);
 
