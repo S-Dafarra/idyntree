@@ -15,8 +15,9 @@
 
 #include "iDynTree/OptimalControlSolver.h"
 #include "iDynTree/OptimizationProblem.h"
-#include "iDynTree/Core/SparseMatrix.h"
+#include "iDynTree/Optimizer.h"
 
+#include <vector>
 #include <memory>
 
 namespace iDynTree {
@@ -37,7 +38,7 @@ namespace iDynTree {
          * \ingroup iDynTreeExperimental
          */
 
-        class MultipleShootingTranscription : public OptimizationProblem {
+        class MultipleShootingTranscription : public optimization::OptimizationProblem {
 
             friend class MultipleShootingSolver;
 
@@ -63,6 +64,10 @@ namespace iDynTree {
 
             bool setAdditionalControlMeshPoints(const std::vector<double>& controlMeshes);
 
+            void setPlusInfinity(double plusInfinity);
+
+            void setMinusInfinity(double minusInfinity);
+
             class MultipleShootingTranscriptionPimpl;
             MultipleShootingTranscriptionPimpl *m_pimpl;
 
@@ -74,23 +79,32 @@ namespace iDynTree {
 
             virtual void reset() override;
 
-            virtual bool getInfo(unsigned int& numberOfVariables, unsigned int& numberOfConstraints,
-                                 unsigned int& numberOfNonZerosConstraintsJacobian, unsigned int& numberOfNonZerosHessian) override;
+            virtual unsigned int numberOfVariables() override;
 
-//            bool getBoundsInfo(VectorDynSize& variablesLowerBounds, VectorDynSize& variableUpperBounds,
-//                               VectorDynSize& constraintsLowerBounds, VectorDynSize& constraintsUpperBounds,
-//                               double infinity = 1e19) override;
+            virtual bool getConstraintsInfo(unsigned int& numberOfConstraints, VectorDynSize& constraintsLowerBounds, VectorDynSize& constraintsUpperBounds) override;
 
-//            bool evaluateCostFunction(const VectorDynSize& variables, double& costValue) override;
+//            virtual bool getVariablesUpperBound(VectorDynSize& variablesUpperBound);
 
-//            bool evaluateCostGradient(const VectorDynSize& variables, VectorDynSize& gradient) override;
+//            virtual bool getVariablesLowerBound(VectorDynSize& variablesLowerBound);
 
-//            bool evaluateConstraints(const VectorDynSize& variables, VectorDynSize& constraints) override;
+//            virtual bool getConstraintsJacobianInfo(std::vector<size_t>& nonZeroElementRows, std::vector<size_t>& nonZeroElementColumns);
 
-//            bool evaluateConstraintsJacobian(const VectorDynSize& variables, SparseMatrix& jacobian) override;
+//            virtual bool getHessianInfo(std::vector<size_t>& nonZeroElementRows, std::vector<size_t>& nonZeroElementColumns);
 
-//            virtual bool evaluateHessian(const VectorDynSize& variables, double costMultiplier,
-//                                         const VectorDynSize& constraintsMultipliers, SparseMatrix<RowMajor>& hessian) override;
+//            virtual bool setVariables(const VectorDynSize& variables);
+
+//            virtual bool evaluateCostFunction(double& costValue);
+
+//            virtual bool evaluateCostGradient(VectorDynSize& gradient);
+
+//            virtual bool evaluateCostHessian(MatrixDynSize& hessian); //using dense matrices, but the sparsity pattern is still obtained
+
+//            virtual bool evaluateConstraints(VectorDynSize& constraints);
+
+//            virtual bool evaluateConstraintsJacobian(MatrixDynSize& jacobian); //using dense matrices, but the sparsity pattern is still obtained
+
+//            virtual bool evaluateConstraintsHessian(const VectorDynSize& constraintsMultipliers, MatrixDynSize& hessian); //using dense matrices, but the sparsity pattern is still obtained
+
         };
 
 
@@ -111,6 +125,10 @@ namespace iDynTree {
 
             bool setAdditionalControlMeshPoints(const std::vector<double>& controlMeshes);
 
+            bool setOptimizer(std::shared_ptr<optimization::Optimizer> optimizer);
+
+
+
             // FIXME: These two cannot be used as VectorDynTree
             // as they are trajectories, not single vectors
             void setInitialGuess(const iDynTree::VectorDynSize& initialGuess);
@@ -121,11 +139,8 @@ namespace iDynTree {
             virtual bool solve() override;
 
         private:
-
-            class MultipleShootingSolverPimpl;
-            MultipleShootingSolverPimpl* m_pimpl;
-
             std::shared_ptr<MultipleShootingTranscription> m_transcription;
+            std::shared_ptr<optimization::Optimizer> m_optimizer;
         };
 
     }

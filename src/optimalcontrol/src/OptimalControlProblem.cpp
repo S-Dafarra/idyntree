@@ -663,6 +663,60 @@ namespace iDynTree {
             return true;
         }
 
+        bool OptimalControlProblem::getConstraintsUpperBound(double time, double infinity, VectorDynSize &upperBound)
+        {
+            if (upperBound.size() != getConstraintsDimension())
+                upperBound.resize(getConstraintsDimension());
+
+            Eigen::Map< Eigen::VectorXd > upperBoundMap = toEigen(upperBound);
+            Eigen::Index offset = 0;
+
+            for (auto group : m_pimpl->constraintsGroups){
+                if (! group.second.group_ptr->getUpperBound(time, group.second.constraintsBuffer)){
+                    toEigen(group.second.constraintsBuffer).setConstant(std::abs(infinity)); //if not upper bounded
+                }
+
+                if (group.second.constraintsBuffer.size() != group.second.group_ptr->constraintsDimension()){
+                    std::ostringstream errorMsg;
+                    errorMsg << "Upper bound dimension different from dimension of group " << group.second.group_ptr->name() << ".";
+                    reportError("OptimalControlProblem", "getConstraintsUpperBound", errorMsg.str().c_str());
+                    return false;
+                }
+
+                upperBoundMap.segment(offset, group.second.constraintsBuffer.size()) = toEigen(group.second.constraintsBuffer);
+                offset += group.second.constraintsBuffer.size();
+            }
+
+            return true;
+        }
+
+        bool OptimalControlProblem::getConstraintsLowerBound(double time, double infinity, VectorDynSize &lowerBound)
+        {
+            if (lowerBound.size() != getConstraintsDimension())
+                lowerBound.resize(getConstraintsDimension());
+
+            Eigen::Map< Eigen::VectorXd > lowerBoundMap = toEigen(lowerBound);
+            Eigen::Index offset = 0;
+
+            for (auto group : m_pimpl->constraintsGroups){
+                if (! group.second.group_ptr->getLowerBound(time, group.second.constraintsBuffer)){
+                    toEigen(group.second.constraintsBuffer).setConstant(-std::abs(infinity)); //if not lower bounded
+                }
+
+                if (group.second.constraintsBuffer.size() != group.second.group_ptr->constraintsDimension()){
+                    std::ostringstream errorMsg;
+                    errorMsg << "Lower bound dimension different from dimension of group " << group.second.group_ptr->name() << ".";
+                    reportError("OptimalControlProblem", "getConstraintsUpperBound", errorMsg.str().c_str());
+                    return false;
+                }
+
+                lowerBoundMap.segment(offset, group.second.constraintsBuffer.size()) = toEigen(group.second.constraintsBuffer);
+                offset += group.second.constraintsBuffer.size();
+            }
+
+            return true;
+        }
+
         bool OptimalControlProblem::isFeasiblePoint(double time, const VectorDynSize &state, const VectorDynSize &control)
         {
             for(auto group : m_pimpl->constraintsGroups){

@@ -22,7 +22,6 @@
 #include <Eigen/Dense>
 #include <iDynTree/Core/EigenHelpers.h>
 
-#include <vector>
 #include <cassert>
 #include <algorithm>
 #include <cmath>
@@ -69,7 +68,7 @@ namespace iDynTree {
             double time;
             MeshPointType type;
             MeshPointOrigin origin;
-            size_t controlOffset, stateOffset;
+            size_t controlIndex, previousControlIndex, stateIndex;
             //std::vector<size_t> integratorAuxiliariesOffsets;
         } MeshPoint;
 
@@ -78,13 +77,17 @@ namespace iDynTree {
             std::shared_ptr<OptimalControlProblem> ocproblem;
             std::shared_ptr<Integrator> integrator;
             size_t totalMeshes, controlMeshes;
-            unsigned int nonZerosJacobian, nonZerosHessian;
             bool prepared;
             std::vector<double> userStateMeshes, userControlMeshes;
             std::vector<MeshPoint> meshPoints;
             std::vector<MeshPoint>::iterator meshPointsEnd;
             double minStepSize, maxStepSize, controlPeriod;
-            size_t numberOfVariables;
+            size_t nx, nu, numberOfVariables, constraintsPerInstant, numberOfConstraints;
+            std::vector<size_t> jacobianNZRows, jacobianNZCols, hessianNZRows, hessianNZCols;
+            size_t jacobianNonZeros, hessianNonZeros;
+            double plusInfinity, minusInfinity;
+            VectorDynSize constraintsLowerBound, constraintsUpperBound;
+            VectorDynSize constraintsBuffer;
 
             void resetMeshPoints(){
                 meshPointsEnd = meshPoints.begin();
@@ -132,19 +135,57 @@ namespace iDynTree {
                 }
             }
 
+            void resetNonZerosCount(){
+                jacobianNonZeros = 0;
+                hessianNonZeros = 0;
+            }
+
+            void addNonZero(std::vector<size_t> input, size_t position, size_t toBeAdded){
+                assert(input.size() + 1 >= position);
+                if (position > input.size())
+                    input.push_back(toBeAdded);
+                else input[position] = toBeAdded;
+            }
+
+            void addJacobianBlock(size_t initRow, size_t rows, size_t initCol, size_t cols){
+                for (size_t i = 0; i < rows; ++i){
+                    for (size_t j = 0; j < cols; ++j){
+                        addNonZero(jacobianNZRows, jacobianNonZeros, initRow + i);
+                        addNonZero(jacobianNZCols, jacobianNonZeros, initCol + j);
+                        jacobianNonZeros++;
+                    }
+                }
+            }
+
+            void addHessianBlock(size_t initRow, size_t rows, size_t initCol, size_t cols){
+                for (size_t i = 0; i < rows; ++i){
+                    for (size_t j = 0; j < cols; ++j){
+                        addNonZero(hessianNZRows, hessianNonZeros, initRow + i);
+                        addNonZero(hessianNZCols, hessianNonZeros, initCol + j);
+                        hessianNonZeros++;
+                    }
+                }
+            }
+
+
+
             MultipleShootingTranscriptionPimpl()
             : ocproblem(nullptr)
             ,integrator(nullptr)
             ,totalMeshes(0)
             ,controlMeshes(0)
-            ,nonZerosJacobian(0)
-            ,nonZerosHessian(0)
             ,prepared(false)
             ,meshPointsEnd(meshPoints.end())
             ,minStepSize(0.001)
             ,maxStepSize(0.01)
             ,controlPeriod(0.01)
+            ,nx(0)
+            ,nu(0)
             ,numberOfVariables(0)
+            ,constraintsPerInstant(0)
+            ,numberOfConstraints(0)
+            ,plusInfinity(1e19)
+            ,minusInfinity(1e19)
             {}
 
             MultipleShootingTranscriptionPimpl(const std::shared_ptr<OptimalControlProblem> problem,
@@ -153,14 +194,18 @@ namespace iDynTree {
             ,integrator(integrationMethod)
             ,totalMeshes(0)
             ,controlMeshes(0)
-            ,nonZerosJacobian(0)
-            ,nonZerosHessian(0)
             ,prepared(false)
             ,meshPointsEnd(meshPoints.end())
             ,minStepSize(0.001)
             ,maxStepSize(0.01)
             ,controlPeriod(0.01)
+            ,nx(0)
+            ,nu(0)
             ,numberOfVariables(0)
+            ,constraintsPerInstant(0)
+            ,numberOfConstraints(0)
+            ,plusInfinity(1e19)
+            ,minusInfinity(1e19)
             {}
         };
 
@@ -248,7 +293,7 @@ namespace iDynTree {
                     m_pimpl->addMeshPoint(newMeshPoint);
                } else {
                    std::ostringstream errorMsg;
-                   errorMsg << "Ignored user defined control mesh point at time " << m_pimpl->userControlMeshes[i] << "Out of time range." << std::endl;
+                   errorMsg << "Ignored user defined control mesh point at time " << m_pimpl->userControlMeshes[i] << "Out of time range.";
                    reportWarning("MultipleShootingSolver", "setMeshPoints", errorMsg.str().c_str());
                }
             }
@@ -262,7 +307,7 @@ namespace iDynTree {
                     m_pimpl->addMeshPoint(newMeshPoint);
                 } else {
                     std::ostringstream errorMsg;
-                    errorMsg << "Ignored user defined state mesh point at time " << m_pimpl->userStateMeshes[i] << "Out of time range." << std::endl;
+                    errorMsg << "Ignored user defined state mesh point at time " << m_pimpl->userStateMeshes[i] << "Out of time range.";
                     reportWarning("MultipleShootingSolver", "setMeshPoints", errorMsg.str().c_str());
                 }
             }
@@ -353,7 +398,7 @@ namespace iDynTree {
                     if (nextMesh->origin < mesh->origin){ //check who has the higher priority
                         m_pimpl->priorityWarning(nextMesh, timeRangeOrigin);
                         m_pimpl->setIgnoredMesh(nextMesh);
-                    } else {
+                    } else { //actually, because of the ordering, this case should never be reached.
                         m_pimpl->priorityWarning(mesh, timeRangeOrigin);
                         m_pimpl->setIgnoredMesh(mesh);
                         do {
@@ -533,9 +578,32 @@ namespace iDynTree {
             return true;
         }
 
+        void MultipleShootingTranscription::setPlusInfinity(double plusInfinity)
+        {
+            assert(plusInfinity > 0);
+            m_pimpl->plusInfinity = plusInfinity;
+        }
+
+        void MultipleShootingTranscription::setMinusInfinity(double minusInfinity)
+        {
+            assert(minusInfinity < 0);
+            m_pimpl->minusInfinity = minusInfinity;
+        }
+
+
         bool MultipleShootingTranscription::prepare()
         {
-            //TODO: Once it is clear from where this method will be called, change the error messages.
+            if (!(m_pimpl->ocproblem)){
+                reportError("MultipleShootingTranscription", "prepare",
+                            "Optimal control problem not set.");
+                return false;
+            }
+
+            if (!(m_pimpl->integrator)) {
+                reportError("MultipleShootingTranscription", "prepare",
+                            "Integrator not set.");
+                return false;
+            }
 
             if ((m_pimpl->ocproblem->finalTime() - m_pimpl->ocproblem->initialTime()) < m_pimpl->minStepSize){
                 reportError("MultipleShootingTranscription", "prepare",
@@ -590,33 +658,173 @@ namespace iDynTree {
                 return false;
             }
             size_t nx = m_pimpl->integrator->dynamicalSystem().lock()->stateSpaceSize();
+            m_pimpl->nx = nx;
             size_t nu = m_pimpl->integrator->dynamicalSystem().lock()->controlSpaceSize();
+            m_pimpl->nu = nu;
             //TODO: I should consider also the possibility to have auxiliary variables in the integrator
             m_pimpl->numberOfVariables = (m_pimpl->totalMeshes - 1) * nx + m_pimpl->controlMeshes * nu; //the -1 removes the initial state from the set of optimization varibales
-            std::vector<MeshPoint>::iterator mesh = m_pimpl->meshPoints.begin();
-            size_t index = 0, previousControlIndex = 0;
+            m_pimpl->constraintsPerInstant = m_pimpl->ocproblem->getConstraintsDimension();
+            size_t nc = m_pimpl->constraintsPerInstant;
+            m_pimpl->numberOfConstraints = (m_pimpl->totalMeshes - 1) * nx + (m_pimpl->constraintsPerInstant) * (m_pimpl->totalMeshes); //dynamical constraints (removing the initial state) and normal constraints
+
+            if (m_pimpl->constraintsBuffer.size() != nc)
+                m_pimpl->constraintsBuffer.resize(static_cast<unsigned int>(nc));
+
+            if (m_pimpl->constraintsLowerBound.size() != m_pimpl->numberOfConstraints)
+                m_pimpl->constraintsLowerBound.resize(static_cast<unsigned int>(m_pimpl->numberOfConstraints));
+            Eigen::Map<Eigen::VectorXd> lowerBoundMap = toEigen(m_pimpl->constraintsLowerBound);
+
+            if (m_pimpl->constraintsUpperBound.size() != m_pimpl->numberOfConstraints)
+                m_pimpl->constraintsUpperBound.resize(static_cast<unsigned int>(m_pimpl->numberOfConstraints));
+            Eigen::Map<Eigen::VectorXd> upperBoundMap = toEigen(m_pimpl->constraintsUpperBound);
+
+
+            m_pimpl->resetNonZerosCount();
+
+            std::vector<MeshPoint>::iterator mesh = m_pimpl->meshPoints.begin(), previousControlMesh = mesh;
+            size_t index = 0, constraintIndex = 0;
             MeshPointOrigin first = MeshPointOrigin::FirstPoint();
             while (mesh != m_pimpl->meshPointsEnd){
                 if (mesh->origin == first){
-                    previousControlIndex = index;
-                    mesh->controlOffset = index;
+                    //setting up the indeces
+                    mesh->controlIndex = index;
+                    mesh->previousControlIndex = index;
                     index += nu;
+                    previousControlMesh = mesh;
+
+                    //Saving constraints bounds
+                    if (!(m_pimpl->ocproblem->getConstraintsLowerBound(mesh->time, m_pimpl->minusInfinity, m_pimpl->constraintsBuffer))){
+                        std::ostringstream errorMsg;
+                        errorMsg << "Error while evaluating constraints lower bounds at time " << mesh->time << ".";
+                        reportError("MultipleShootingSolver", "prepare", errorMsg.str().c_str());
+                    }
+                    lowerBoundMap.segment(constraintIndex, nc) = toEigen(m_pimpl->constraintsBuffer);
+
+                    if (!(m_pimpl->ocproblem->getConstraintsUpperBound(mesh->time, m_pimpl->plusInfinity, m_pimpl->constraintsBuffer))){
+                        std::ostringstream errorMsg;
+                        errorMsg << "Error while evaluating constraints upper bounds at time " << mesh->time << ".";
+                        reportError("MultipleShootingSolver", "prepare", errorMsg.str().c_str());
+                    }
+                    upperBoundMap.segment(constraintIndex, nc) = toEigen(m_pimpl->constraintsBuffer);
+
+                    //Saving the jacobian structure due to the constraints
+                    m_pimpl->addJacobianBlock(constraintIndex, nc, mesh->controlIndex, nu);
+                    constraintIndex += nc;
+
+                    //Saving the hessian structure
+                    m_pimpl->addHessianBlock(mesh->controlIndex, nu, mesh->controlIndex, nu); //assume that a cost/constraint depends on the square of u
+
                 } else if (mesh->type == MeshPointType::Control) {
-                    previousControlIndex = index;
-                    mesh->controlOffset = index;
+                    mesh->previousControlIndex = previousControlMesh->controlIndex;
+                    mesh->controlIndex = index;
                     index += nu;
-                    mesh->stateOffset = index;
+                    mesh->stateIndex = index;
                     index += nx;
+                    previousControlMesh = mesh;
+
+                    //Saving dynamical constraints bounds
+                    lowerBoundMap.segment(constraintIndex, nx).setZero();
+                    upperBoundMap.segment(constraintIndex, nx).setZero();
+
+                    //Saving the jacobian structure due to the dynamical constraints
+                    m_pimpl->addJacobianBlock(constraintIndex, nx, mesh->previousControlIndex, nu);
+                    m_pimpl->addJacobianBlock(constraintIndex, nx, mesh->controlIndex, nu);
+                    m_pimpl->addJacobianBlock(constraintIndex, nx, mesh->stateIndex, nx);
+                    if ((mesh - 1)->origin != first){
+                        m_pimpl->addJacobianBlock(constraintIndex, nx, (mesh - 1)->stateIndex, nx);
+                    }
+                    constraintIndex += nx;
+
+                    //Saving constraints bounds
+                    if (!(m_pimpl->ocproblem->getConstraintsLowerBound(mesh->time, m_pimpl->minusInfinity, m_pimpl->constraintsBuffer))){
+                        std::ostringstream errorMsg;
+                        errorMsg << "Error while evaluating constraints lower bounds at time " << mesh->time << ".";
+                        reportError("MultipleShootingSolver", "prepare", errorMsg.str().c_str());
+                    }
+                    lowerBoundMap.segment(constraintIndex, nc) = toEigen(m_pimpl->constraintsBuffer);
+
+                    if (!(m_pimpl->ocproblem->getConstraintsUpperBound(mesh->time, m_pimpl->plusInfinity, m_pimpl->constraintsBuffer))){
+                        std::ostringstream errorMsg;
+                        errorMsg << "Error while evaluating constraints upper bounds at time " << mesh->time << ".";
+                        reportError("MultipleShootingSolver", "prepare", errorMsg.str().c_str());
+                    }
+                    upperBoundMap.segment(constraintIndex, nc) = toEigen(m_pimpl->constraintsBuffer);
+
+                    //Saving the jacobian structure due to the constraints
+                    m_pimpl->addJacobianBlock(constraintIndex, nc, mesh->stateIndex, nx);
+                    m_pimpl->addJacobianBlock(constraintIndex, nc, mesh->controlIndex, nu);
+                    constraintIndex += nc;
+
+                    //Saving the hessian structure
+                    m_pimpl->addHessianBlock(mesh->controlIndex, nu, mesh->controlIndex, nu); //assume that a cost/constraint depends on the square of u
+                    m_pimpl->addHessianBlock(mesh->stateIndex, nx, mesh->stateIndex, nx); //assume that a cost/constraint depends on the square of x
+
+                    m_pimpl->addHessianBlock(mesh->controlIndex, nu, mesh->stateIndex, nx); //assume that a cost/constraint depends on the product of x-u
+                    m_pimpl->addHessianBlock(mesh->stateIndex, nx, mesh->controlIndex, nu);
+
+                    m_pimpl->addHessianBlock(mesh->previousControlIndex, nu, mesh->stateIndex, nx); //assume that due to the dynamics we have a cross relation between x and u-1
+                    m_pimpl->addHessianBlock(mesh->stateIndex, nx, mesh->previousControlIndex, nu);
+
+                    if ((mesh - 1)->origin != first){
+                        m_pimpl->addHessianBlock((mesh - 1)->stateIndex, nx, mesh->stateIndex, nx); //assume that due to the dynamics we have a cross relation between x and x-1
+                        m_pimpl->addHessianBlock(mesh->stateIndex, nx, (mesh - 1)->stateIndex, nx);
+                    }
+
+
                 } else if (mesh->type == MeshPointType::State) {
-                    mesh->controlOffset = previousControlIndex;
-                    mesh->stateOffset = index;
+                    mesh->controlIndex = previousControlMesh->controlIndex;
+                    mesh->previousControlIndex = previousControlMesh->controlIndex;
+                    mesh->stateIndex = index;
                     index += nx;
+
+                    //Saving dynamical constraints bounds
+                    lowerBoundMap.segment(constraintIndex, nx).setZero();
+                    upperBoundMap.segment(constraintIndex, nx).setZero();
+
+                    //Saving the jacobian structure due to the dynamical constraints
+                    m_pimpl->addJacobianBlock(constraintIndex, nx, mesh->controlIndex, nu);
+                    m_pimpl->addJacobianBlock(constraintIndex, nx, mesh->stateIndex, nx);
+                    if ((mesh - 1)->origin != first){
+                        m_pimpl->addJacobianBlock(constraintIndex, nx, (mesh - 1)->stateIndex, nx);
+                    }
+                    constraintIndex += nx;
+
+                    //Saving constraints bounds
+                    if (!(m_pimpl->ocproblem->getConstraintsLowerBound(mesh->time, m_pimpl->minusInfinity, m_pimpl->constraintsBuffer))){
+                        std::ostringstream errorMsg;
+                        errorMsg << "Error while evaluating constraints lower bounds at time " << mesh->time << ".";
+                        reportError("MultipleShootingSolver", "prepare", errorMsg.str().c_str());
+                    }
+                    lowerBoundMap.segment(constraintIndex, nc) = toEigen(m_pimpl->constraintsBuffer);
+
+                    if (!(m_pimpl->ocproblem->getConstraintsUpperBound(mesh->time, m_pimpl->plusInfinity, m_pimpl->constraintsBuffer))){
+                        std::ostringstream errorMsg;
+                        errorMsg << "Error while evaluating constraints upper bounds at time " << mesh->time << ".";
+                        reportError("MultipleShootingSolver", "prepare", errorMsg.str().c_str());
+                    }
+                    upperBoundMap.segment(constraintIndex, nc) = toEigen(m_pimpl->constraintsBuffer);
+
+                    m_pimpl->addJacobianBlock(constraintIndex, nc, mesh->stateIndex, nx);
+                    m_pimpl->addJacobianBlock(constraintIndex, nc, mesh->controlIndex, nu);
+                    constraintIndex += nc;
+
+                    //Saving the hessian structure
+                    m_pimpl->addHessianBlock(mesh->controlIndex, nu, mesh->controlIndex, nu); //assume that a cost/constraint depends on the square of u
+                    m_pimpl->addHessianBlock(mesh->stateIndex, nx, mesh->stateIndex, nx); //assume that a cost/constraint depends on the square of x
+
+                    m_pimpl->addHessianBlock(mesh->controlIndex, nu, mesh->stateIndex, nx); //assume that a cost/constraint depends on the product of x-u
+                    m_pimpl->addHessianBlock(mesh->stateIndex, nx, mesh->controlIndex, nu);
+
+                    if ((mesh - 1)->origin != first){
+                        m_pimpl->addHessianBlock((mesh - 1)->stateIndex, nx, mesh->stateIndex, nx); //assume that due to the dynamics we have a cross relation between x and x-1
+                        m_pimpl->addHessianBlock(mesh->stateIndex, nx, (mesh - 1)->stateIndex, nx);
+                    }
+
                 }
                 mesh++;
             }
             assert(index == m_pimpl->numberOfVariables);
-
-            //here I still need to count the constraints and the number of nonzeros.
+            assert(constraintIndex == m_pimpl->numberOfConstraints);
 
             m_pimpl->prepared = true;
             return true;
@@ -627,34 +835,45 @@ namespace iDynTree {
             m_pimpl->prepared = false;
             m_pimpl->totalMeshes = 0;
             m_pimpl->controlMeshes = 0;
+            m_pimpl->numberOfVariables = 0;
+            m_pimpl->resetNonZerosCount();
+            m_pimpl->resetMeshPoints();
         }
 
-        bool MultipleShootingTranscription::getInfo(unsigned int &numberOfVariables, unsigned int &numberOfConstraints,
-                                                 unsigned int &numberOfNonZerosConstraintsJacobian, unsigned int &numberOfNonZerosHessian)
+        unsigned int MultipleShootingTranscription::numberOfVariables()
         {
-
+            return static_cast<unsigned int>(m_pimpl->numberOfVariables);
         }
 
-        // MARK: Private implementation
-        class MultipleShootingSolver::MultipleShootingSolverPimpl {
-        public:
-            MultipleShootingSolverPimpl(const std::shared_ptr<OptimalControlProblem> problem)
-            : controlProblem(problem) {}
+        bool MultipleShootingTranscription::getConstraintsInfo(unsigned int &numberOfConstraints,
+                                                               VectorDynSize &constraintsLowerBounds,
+                                                               VectorDynSize &constraintsUpperBounds)
+        {
+            if (!(m_pimpl->prepared)){
+                reportError("MultipleShootingTranscription", "getConstraintsInfo", "First you need to call the prepare method");
+                return false;
+            }
 
-            std::shared_ptr<OptimalControlProblem> controlProblem;
-            iDynTree::VectorDynSize lastSolution;
+            numberOfConstraints = static_cast<unsigned int>(m_pimpl->numberOfConstraints);
 
-            iDynTree::VectorDynSize optimisationVariable;
-        };
+            if (constraintsLowerBounds.size() != numberOfConstraints)
+                constraintsLowerBounds.resize(numberOfConstraints);
+
+            if (constraintsUpperBounds.size() != numberOfConstraints)
+                constraintsUpperBounds.resize(numberOfConstraints);
+
+            constraintsLowerBounds = m_pimpl->constraintsLowerBound;
+            constraintsUpperBounds = m_pimpl->constraintsUpperBound;
+
+            return true;
+        }
 
 
         // MARK: Class implementation
 
         MultipleShootingSolver::MultipleShootingSolver(const std::shared_ptr<OptimalControlProblem> &ocProblem)
         : OptimalControlSolver(ocProblem)
-        , m_pimpl(new MultipleShootingSolverPimpl(ocProblem))
         {
-            assert(m_pimpl);
             m_transcription.reset(new MultipleShootingTranscription());
             assert(m_transcription);
             m_transcription->setOptimalControlProblem(ocProblem);
@@ -685,28 +904,48 @@ namespace iDynTree {
             return m_transcription->setAdditionalControlMeshPoints(controlMeshes);
         }
 
-        void MultipleShootingSolver::setInitialGuess(const iDynTree::VectorDynSize& initialGuess)
+        bool MultipleShootingSolver::setOptimizer(std::shared_ptr<optimization::Optimizer> optimizer)
         {
-            assert(m_pimpl);
-            m_pimpl->lastSolution = initialGuess;
-        }
+            if (!optimizer) {
+                reportError("MultipleShootingSolver", "setOptimizer", "Empty optimizer pointer");
+                return false;
+            }
 
-        const iDynTree::VectorDynSize& MultipleShootingSolver::lastSolution()
-        {
-            assert(m_pimpl);
-            return m_pimpl->lastSolution;
-        }
+            if (!(optimizer->setProblem(m_transcription))){
+                reportError("MultipleShootingSolver", "setOptimizer", "Cannot use the selected optimizer to solve the specified optimal control problem.");
+                return false;
+            }
 
-        bool MultipleShootingSolver::initialize()
-        {
-            assert(m_pimpl);
+            m_optimizer = optimizer;
+
+            m_transcription->setPlusInfinity(m_optimizer->plusInfinity());
+
+            m_transcription->setMinusInfinity(m_optimizer->minusInfinity());
 
             return true;
         }
 
+        void MultipleShootingSolver::setInitialGuess(const iDynTree::VectorDynSize& initialGuess)
+        {
+
+        }
+
+        const iDynTree::VectorDynSize& MultipleShootingSolver::lastSolution()
+        {
+
+        }
+
+        bool MultipleShootingSolver::initialize()
+        {
+            if (!m_optimizer){
+                reportError("MultipleShootingSolver", "initialize", "No optimizer selected.");
+                return false;
+            }
+            return m_transcription->prepare();
+        }
+
         bool MultipleShootingSolver::solve()
         {
-            assert(m_pimpl);
             return false;
         }
     }

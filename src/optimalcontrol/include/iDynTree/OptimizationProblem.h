@@ -11,15 +11,18 @@
  */
 
 #ifndef IDYNTREE_OPTIMALCONTROL_OPTIMIZATIONPROBLEM_H
-#define IDYNTREE_OPTIMALCONTROL_OPTIMIZATIONINSTANCE_H
+#define IDYNTREE_OPTIMALCONTROL_OPTIMIZATIONPROBLEM_H
 
-#include <iDynTree/Core/SparseMatrix.h>
+#include <vector>
+#include <cstddef>
 
 namespace iDynTree {
 
     class VectorDynSize;
 
-    namespace optimalcontrol {
+    class MatrixDynSize;
+
+    namespace optimization {
 
         /**
          * @warning This class is still in active development, and so API interface can change between iDynTree versions.
@@ -38,12 +41,17 @@ namespace iDynTree {
 
             virtual void reset();
 
-            virtual bool getInfo(unsigned int& numberOfVariables, unsigned int& numberOfConstraints,
-                                 unsigned int& numberOfNonZerosConstraintsJacobian, unsigned int& numberOfNonZerosHessian);
+            virtual unsigned int numberOfVariables() = 0;
 
-            virtual bool getBoundsInfo(VectorDynSize& variablesLowerBounds, VectorDynSize& variableUpperBounds,
-                                       VectorDynSize& constraintsLowerBounds, VectorDynSize& constraintsUpperBounds,
-                                       double infinity = 1e19);
+            virtual bool getConstraintsInfo(unsigned int& numberOfConstraints, VectorDynSize& constraintsLowerBounds, VectorDynSize& constraintsUpperBounds);
+
+            virtual bool getVariablesUpperBound(VectorDynSize& variablesUpperBound);
+
+            virtual bool getVariablesLowerBound(VectorDynSize& variablesLowerBound);
+
+            virtual bool getConstraintsJacobianInfo(std::vector<size_t>& nonZeroElementRows, std::vector<size_t>& nonZeroElementColumns);
+
+            virtual bool getHessianInfo(std::vector<size_t>& nonZeroElementRows, std::vector<size_t>& nonZeroElementColumns);
 
            /* virtual bool getStartingPoint(VectorDynSize& variablesGuess,
                                           VectorDynSize& lowerBoundsMultipliersGuess,
@@ -56,15 +64,16 @@ namespace iDynTree {
 
             virtual bool evaluateCostGradient(VectorDynSize& gradient);
 
+            virtual bool evaluateCostHessian(MatrixDynSize& hessian); //using dense matrices, but the sparsity pattern is still obtained
+
             virtual bool evaluateConstraints(VectorDynSize& constraints);
 
-            virtual bool evaluateConstraintsJacobian(SparseMatrix<RowMajor>& jacobian);
+            virtual bool evaluateConstraintsJacobian(MatrixDynSize& jacobian); //using dense matrices, but the sparsity pattern is still obtained
 
-            virtual bool evaluateHessian(double costMultiplier, const VectorDynSize& constraintsMultipliers, SparseMatrix<RowMajor>& hessian);
+            virtual bool evaluateConstraintsHessian(const VectorDynSize& constraintsMultipliers, MatrixDynSize& hessian); //using dense matrices, but the sparsity pattern is still obtained
 
-            //virtual bool getSolution(); this method should be part of the solver interface (?)
         };
     }
 }
 
-#endif // IDYNTREE_OPTIMALCONTROL_OPTIMIZATIONINSTANCE_H
+#endif // IDYNTREE_OPTIMALCONTROL_OPTIMIZATIONPROBLEM_H

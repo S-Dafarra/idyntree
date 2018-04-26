@@ -63,9 +63,9 @@ namespace iDynTree {
                                      const VectorDynSize& control,
                                      VectorDynSize& constraints);
 
-            bool getLowerBounds(double time, VectorDynSize& lowerBound);
+            bool getLowerBound(double time, VectorDynSize& lowerBound); //return false if no lower bound is set
 
-            bool getUpperBounds(double time, VectorDynSize& upperBound);
+            bool getUpperBound(double time, VectorDynSize& upperBound); //return false if no upper bound is set
 
             bool constraintJacobianWRTState(double time,
                                             const VectorDynSize& state,

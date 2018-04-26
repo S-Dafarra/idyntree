@@ -15,79 +15,99 @@
 
 namespace iDynTree {
 
-    namespace optimalcontrol {
+    namespace optimization {
 
-    OptimizationProblem::OptimizationProblem()
-    {
-    }
-
-    OptimizationProblem::~OptimizationProblem()
-    {
-    }
-
-    bool OptimizationProblem::prepare()
-    {
-        reportError("OptimizationInstance", "prepare", "Method not implemented.");
-        return false;
-    }
-
-    void OptimizationProblem::reset()
-    {
-
-    }
-
-    bool OptimizationProblem::getInfo(unsigned int &numberOfVariables, unsigned int &numberOfConstraints,
-                                           unsigned int &numberOfNonZerosConstraintsJacobian, unsigned int &numberOfNonZerosHessian)
+        OptimizationProblem::OptimizationProblem()
         {
-            reportError("OptimizationInstance", "getInfo", "Method not implemented.");
+        }
+
+        OptimizationProblem::~OptimizationProblem()
+        {
+        }
+
+        bool OptimizationProblem::prepare()
+        {
+            reportError("OptimizationProblem", "prepare", "Method not implemented.");
             return false;
         }
 
-        bool OptimizationProblem::getBoundsInfo(VectorDynSize &variablesLowerBounds, VectorDynSize &variableUpperBounds,
-                                                 VectorDynSize &constraintsLowerBounds, VectorDynSize &constraintsUpperBounds,
-                                                 double infinity /* = 1e19*/)
+        void OptimizationProblem::reset()
         {
-            reportError("OptimizationInstance", "getBoundsInfo", "Method not implemented.");
+
+        }
+
+
+        bool OptimizationProblem::getConstraintsInfo(unsigned int &numberOfConstraints, VectorDynSize &constraintsLowerBounds, VectorDynSize &constraintsUpperBounds)
+        {
+            reportError("OptimizationProblem", "getConstraintsInfo", "Method not implemented.");
+            return false;
+        }
+
+        bool OptimizationProblem::getVariablesUpperBound(VectorDynSize &variablesUpperBounds)
+        {
+            reportError("OptimizationProblem", "getVariablesUpperBounds", "Method not implemented.");
+            return false;
+        }
+
+        bool OptimizationProblem::getVariablesLowerBound(VectorDynSize &variablesLowerBound)
+        {
+            reportError("OptimizationProblem", "getVariablesLowerBound", "Method not implemented.");
+            return false;
+        }
+
+        bool OptimizationProblem::getConstraintsJacobianInfo(std::vector<size_t> &nonZeroElementRows, std::vector<size_t> &nonZeroElementColumns)
+        {
+            reportError("OptimizationProblem", "getConstraintsJacobianInfo", "Method not implemented.");
+            return false;
+        }
+
+        bool OptimizationProblem::getHessianInfo(std::vector<size_t> &nonZeroElementRows, std::vector<size_t> &nonZeroElementColumns)
+        {
+            reportError("OptimizationProblem", "getHessianInfo", "Method not implemented.");
             return false;
         }
 
         bool OptimizationProblem::setVariables(const VectorDynSize &variables)
         {
-            reportError("OptimizationInstance", "setVariables", "Method not implemented.");
+            reportError("OptimizationProblem", "setVariables", "Method not implemented.");
             return false;
         }
 
         bool OptimizationProblem::evaluateCostFunction(double &costValue)
         {
-            reportError("OptimizationInstance", "evaluateCostFunction", "Method not implemented.");
+            reportError("OptimizationProblem", "evaluateCostFunction", "Method not implemented.");
             return false;
         }
 
         bool OptimizationProblem::evaluateCostGradient(VectorDynSize &gradient)
         {
-            reportError("OptimizationInstance", "evaluateCostGradient", "Method not implemented.");
+            reportError("OptimizationProblem", "evaluateCostGradient", "Method not implemented.");
+            return false;
+        }
+
+        bool OptimizationProblem::evaluateCostHessian(MatrixDynSize &hessian)
+        {
+            reportError("OptimizationProblem", "evaluateCostHessian", "Method not implemented.");
             return false;
         }
 
         bool OptimizationProblem::evaluateConstraints(VectorDynSize &constraints)
         {
-            reportError("OptimizationInstance", "evaluateConstraints", "Method not implemented.");
+            reportError("OptimizationProblem", "evaluateConstraints", "Method not implemented.");
             return false;
         }
 
-        bool OptimizationProblem::evaluateConstraintsJacobian(SparseMatrix<RowMajor> &jacobian)
+        bool OptimizationProblem::evaluateConstraintsJacobian(MatrixDynSize &jacobian)
         {
-            reportError("OptimizationInstance", "evaluateConstraintsJacobian", "Method not implemented.");
+            reportError("OptimizationProblem", "evaluateConstraintsJacobian", "Method not implemented.");
             return false;
         }
 
-        bool OptimizationProblem::evaluateHessian(double costMultiplier,
-                                                   const VectorDynSize &constraintsMultipliers,  SparseMatrix<RowMajor> &hessian)
+        bool OptimizationProblem::evaluateConstraintsHessian(const VectorDynSize &constraintsMultipliers, MatrixDynSize &hessian)
         {
-            reportError("OptimizationInstance", "evaluateHessian", "Method not implemented.");
+            reportError("OptimizationProblem", "evaluateConstraintsHessian", "Method not implemented.");
             return false;
         }
-
 
     }
 }

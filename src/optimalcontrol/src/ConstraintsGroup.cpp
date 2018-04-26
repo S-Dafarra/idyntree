@@ -275,7 +275,7 @@ namespace optimalcontrol {
             return true;
         }
 
-        bool ConstraintsGroup::getLowerBounds(double time, VectorDynSize &lowerBound)
+        bool ConstraintsGroup::getLowerBound(double time, VectorDynSize &lowerBound)
         {
             if (isAnyTimeGroup()){
                 return m_pimpl->group.begin()->second.get()->constraint->getLowerBound(lowerBound);
@@ -300,7 +300,7 @@ namespace optimalcontrol {
             return true;
         }
 
-        bool ConstraintsGroup::getUpperBounds(double time, VectorDynSize &upperBound)
+        bool ConstraintsGroup::getUpperBound(double time, VectorDynSize &upperBound)
         {
             if (isAnyTimeGroup()){
                 return m_pimpl->group.begin()->second.get()->constraint->getUpperBound(upperBound);

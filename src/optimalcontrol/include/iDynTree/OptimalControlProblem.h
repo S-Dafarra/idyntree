@@ -86,42 +86,46 @@ namespace iDynTree {
 
             std::vector<TimeRange>& getCostsTimeRanges() const;
 
-            bool setStateBoxConstraints(const iDynTree::VectorDynSize& minState,
-                                        const iDynTree::VectorDynSize& maxState);
-            bool setControlBoxConstraints(const iDynTree::VectorDynSize& minControl,
-                                          const iDynTree::VectorDynSize& maxControl);
+            bool setStateBoxConstraints(const VectorDynSize& minState,
+                                        const VectorDynSize& maxState);
+            bool setControlBoxConstraints(const VectorDynSize& minControl,
+                                          const VectorDynSize& maxControl);
 
-            bool costsEvaluation(double time, const iDynTree::VectorDynSize& state, const iDynTree::VectorDynSize& control, double& costValue);
+            bool costsEvaluation(double time, const VectorDynSize& state, const VectorDynSize& control, double& costValue);
 
             bool costsFirstPartialDerivativeWRTState(double time,
-                                                     const iDynTree::VectorDynSize& state,
-                                                     const iDynTree::VectorDynSize& control,
-                                                     iDynTree::VectorDynSize& partialDerivative);
+                                                     const VectorDynSize& state,
+                                                     const VectorDynSize& control,
+                                                     VectorDynSize& partialDerivative);
 
             bool costFirstPartialDerivativeWRTControl(double time,
-                                                      const iDynTree::VectorDynSize& state,
-                                                      const iDynTree::VectorDynSize& control,
-                                                      iDynTree::VectorDynSize& partialDerivative);
+                                                      const VectorDynSize& state,
+                                                      const VectorDynSize& control,
+                                                      VectorDynSize& partialDerivative);
 
             bool costSecondPartialDerivativeWRTState(double time,
-                                                     const iDynTree::VectorDynSize& state,
-                                                     const iDynTree::VectorDynSize& control,
-                                                     iDynTree::MatrixDynSize& partialDerivative);
+                                                     const VectorDynSize& state,
+                                                     const VectorDynSize& control,
+                                                     MatrixDynSize& partialDerivative);
 
             bool costSecondPartialDerivativeWRTControl(double time,
-                                                       const iDynTree::VectorDynSize& state,
-                                                       const iDynTree::VectorDynSize& control,
-                                                       iDynTree::MatrixDynSize& partialDerivative);
+                                                       const VectorDynSize& state,
+                                                       const VectorDynSize& control,
+                                                       MatrixDynSize& partialDerivative);
 
 
             bool costSecondPartialDerivativeWRTStateControl(double time,
-                                                            const iDynTree::VectorDynSize& state,
-                                                            const iDynTree::VectorDynSize& control,
-                                                            iDynTree::MatrixDynSize& partialDerivative);
+                                                            const VectorDynSize& state,
+                                                            const VectorDynSize& control,
+                                                            MatrixDynSize& partialDerivative);
 
-            bool constraintsEvaluation(double time, const iDynTree::VectorDynSize& state, const iDynTree::VectorDynSize& control, iDynTree::VectorDynSize& constraintsValue);
+            bool constraintsEvaluation(double time, const VectorDynSize& state, const VectorDynSize& control, VectorDynSize& constraintsValue);
 
-            bool isFeasiblePoint(double time, const iDynTree::VectorDynSize& state, const iDynTree::VectorDynSize& control);
+            bool getConstraintsUpperBound(double time, double infinity, VectorDynSize& upperBound); //returns false if something goes wrong
+
+            bool getConstraintsLowerBound(double time, double infinity, VectorDynSize& lowerBound); //returns false if something goes wrong
+
+            bool isFeasiblePoint(double time, const VectorDynSize& state, const VectorDynSize& control);
 
             bool constraintsJacobianWRTState(double time,
                                              const VectorDynSize& state,
