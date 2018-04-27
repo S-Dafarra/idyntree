@@ -68,6 +68,8 @@ namespace iDynTree {
 
             void setMinusInfinity(double minusInfinity);
 
+            bool setInitialState(const VectorDynSize &initialState);
+
             class MultipleShootingTranscriptionPimpl;
             MultipleShootingTranscriptionPimpl *m_pimpl;
 
@@ -93,15 +95,15 @@ namespace iDynTree {
 
             virtual bool setVariables(const VectorDynSize& variables) override;
 
-//            virtual bool evaluateCostFunction(double& costValue);
+            virtual bool evaluateCostFunction(double& costValue) override;
 
-//            virtual bool evaluateCostGradient(VectorDynSize& gradient);
+            virtual bool evaluateCostGradient(VectorDynSize& gradient) override;
 
-//            virtual bool evaluateCostHessian(MatrixDynSize& hessian); //using dense matrices, but the sparsity pattern is still obtained
+            virtual bool evaluateCostHessian(MatrixDynSize& hessian) override; //using dense matrices, but the sparsity pattern is still obtained
 
-//            virtual bool evaluateConstraints(VectorDynSize& constraints);
+            virtual bool evaluateConstraints(VectorDynSize& constraints) override;
 
-//            virtual bool evaluateConstraintsJacobian(MatrixDynSize& jacobian); //using dense matrices, but the sparsity pattern is still obtained
+            virtual bool evaluateConstraintsJacobian(MatrixDynSize& jacobian) override; //using dense matrices, but the sparsity pattern is still obtained
 
 //            virtual bool evaluateConstraintsHessian(const VectorDynSize& constraintsMultipliers, MatrixDynSize& hessian); //using dense matrices, but the sparsity pattern is still obtained
 
@@ -126,6 +128,8 @@ namespace iDynTree {
             bool setAdditionalControlMeshPoints(const std::vector<double>& controlMeshes);
 
             bool setOptimizer(std::shared_ptr<optimization::Optimizer> optimizer);
+
+            bool setInitialState(const VectorDynSize &initialState);
 
 
 

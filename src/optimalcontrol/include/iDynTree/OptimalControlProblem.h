@@ -115,26 +115,26 @@ namespace iDynTree {
                                                      const VectorDynSize& control,
                                                      VectorDynSize& partialDerivative);
 
-            bool costFirstPartialDerivativeWRTControl(double time,
-                                                      const VectorDynSize& state,
-                                                      const VectorDynSize& control,
-                                                      VectorDynSize& partialDerivative);
-
-            bool costSecondPartialDerivativeWRTState(double time,
-                                                     const VectorDynSize& state,
-                                                     const VectorDynSize& control,
-                                                     MatrixDynSize& partialDerivative);
-
-            bool costSecondPartialDerivativeWRTControl(double time,
+            bool costsFirstPartialDerivativeWRTControl(double time,
                                                        const VectorDynSize& state,
                                                        const VectorDynSize& control,
-                                                       MatrixDynSize& partialDerivative);
+                                                       VectorDynSize& partialDerivative);
+
+            bool costsSecondPartialDerivativeWRTState(double time,
+                                                      const VectorDynSize& state,
+                                                      const VectorDynSize& control,
+                                                      MatrixDynSize& partialDerivative);
+
+            bool costsSecondPartialDerivativeWRTControl(double time,
+                                                        const VectorDynSize& state,
+                                                        const VectorDynSize& control,
+                                                        MatrixDynSize& partialDerivative);
 
 
-            bool costSecondPartialDerivativeWRTStateControl(double time,
-                                                            const VectorDynSize& state,
-                                                            const VectorDynSize& control,
-                                                            MatrixDynSize& partialDerivative);
+            bool costsSecondPartialDerivativeWRTStateControl(double time,
+                                                             const VectorDynSize& state,
+                                                             const VectorDynSize& control,
+                                                             MatrixDynSize& partialDerivative);
 
             bool constraintsEvaluation(double time, const VectorDynSize& state, const VectorDynSize& control, VectorDynSize& constraintsValue);
 

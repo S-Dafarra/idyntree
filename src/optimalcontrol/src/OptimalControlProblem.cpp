@@ -598,7 +598,7 @@ namespace iDynTree {
             return true;
         }
 
-        bool OptimalControlProblem::costFirstPartialDerivativeWRTControl(double time, const VectorDynSize &state, const VectorDynSize &control, VectorDynSize &partialDerivative)
+        bool OptimalControlProblem::costsFirstPartialDerivativeWRTControl(double time, const VectorDynSize &state, const VectorDynSize &control, VectorDynSize &partialDerivative)
         {
             if (partialDerivative.size() != control.size())
                 partialDerivative.resize(control.size());
@@ -633,7 +633,7 @@ namespace iDynTree {
             return true;
         }
 
-        bool OptimalControlProblem::costSecondPartialDerivativeWRTState(double time, const VectorDynSize &state, const VectorDynSize &control, MatrixDynSize &partialDerivative)
+        bool OptimalControlProblem::costsSecondPartialDerivativeWRTState(double time, const VectorDynSize &state, const VectorDynSize &control, MatrixDynSize &partialDerivative)
         {
             if ((partialDerivative.rows() != state.size()) || (partialDerivative.cols() != state.size()))
                 partialDerivative.resize(state.size(), state.size());
@@ -669,7 +669,7 @@ namespace iDynTree {
             return true;
         }
 
-        bool OptimalControlProblem::costSecondPartialDerivativeWRTControl(double time, const VectorDynSize &state, const VectorDynSize &control, MatrixDynSize &partialDerivative)
+        bool OptimalControlProblem::costsSecondPartialDerivativeWRTControl(double time, const VectorDynSize &state, const VectorDynSize &control, MatrixDynSize &partialDerivative)
         {
             if ((partialDerivative.rows() != control.size()) || (partialDerivative.cols() != control.size()))
                 partialDerivative.resize(control.size(), control.size());
@@ -706,7 +706,7 @@ namespace iDynTree {
             return true;
         }
 
-        bool OptimalControlProblem::costSecondPartialDerivativeWRTStateControl(double time, const VectorDynSize &state, const VectorDynSize &control, MatrixDynSize &partialDerivative)
+        bool OptimalControlProblem::costsSecondPartialDerivativeWRTStateControl(double time, const VectorDynSize &state, const VectorDynSize &control, MatrixDynSize &partialDerivative)
         {
             if ((partialDerivative.rows() != state.size()) || (partialDerivative.cols() != control.size()))
                 partialDerivative.resize(state.size(), control.size());
