@@ -70,6 +70,10 @@ namespace iDynTree {
 
             bool setInitialState(const VectorDynSize &initialState);
 
+            bool getTimings(std::vector<double>& stateEvaluations, std::vector<double>& controlEvaluations);
+
+            bool getSolution(std::vector<VectorDynSize>& states, std::vector<VectorDynSize>& controls);
+
             class MultipleShootingTranscriptionPimpl;
             MultipleShootingTranscriptionPimpl *m_pimpl;
 
@@ -105,7 +109,7 @@ namespace iDynTree {
 
             virtual bool evaluateConstraintsJacobian(MatrixDynSize& jacobian) override; //using dense matrices, but the sparsity pattern is still obtained
 
-//            virtual bool evaluateConstraintsHessian(const VectorDynSize& constraintsMultipliers, MatrixDynSize& hessian); //using dense matrices, but the sparsity pattern is still obtained
+            virtual bool evaluateConstraintsHessian(const VectorDynSize& constraintsMultipliers, MatrixDynSize& hessian) override; //using dense matrices, but the sparsity pattern is still obtained
 
         };
 
@@ -131,16 +135,13 @@ namespace iDynTree {
 
             bool setInitialState(const VectorDynSize &initialState);
 
-
-
-            // FIXME: These two cannot be used as VectorDynTree
-            // as they are trajectories, not single vectors
-            void setInitialGuess(const iDynTree::VectorDynSize& initialGuess);
-            const iDynTree::VectorDynSize& lastSolution();
-
+            bool getTimings(std::vector<double>& stateEvaluations, std::vector<double>& controlEvaluations);
 
             virtual bool initialize() override;
+
             virtual bool solve() override;
+
+            bool getSolution(std::vector<VectorDynSize>& states, std::vector<VectorDynSize>& controls);
 
         private:
             std::shared_ptr<MultipleShootingTranscription> m_transcription;

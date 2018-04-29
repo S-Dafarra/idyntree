@@ -92,6 +92,8 @@ namespace iDynTree {
             std::vector<VectorDynSize> collocationStateBuffer, collocationControlBuffer;
             std::vector<MatrixDynSize> collocationStateJacBuffer, collocationControlJacBuffer;
             MatrixDynSize constraintsStateJacBuffer, constraintsControlJacBuffer;
+            VectorDynSize solution;
+            bool solved;
 
             void resetMeshPoints(){
                 meshPointsEnd = meshPoints.begin();
@@ -260,7 +262,8 @@ namespace iDynTree {
             ,constraintsPerInstant(0)
             ,numberOfConstraints(0)
             ,plusInfinity(1e19)
-            ,minusInfinity(1e19)
+            ,minusInfinity(-1e19)
+            ,solved(false)
             {}
 
             MultipleShootingTranscriptionPimpl(const std::shared_ptr<OptimalControlProblem> problem,
@@ -280,7 +283,8 @@ namespace iDynTree {
             ,constraintsPerInstant(0)
             ,numberOfConstraints(0)
             ,plusInfinity(1e19)
-            ,minusInfinity(1e19)
+            ,minusInfinity(-1e19)
+            ,solved(false)
             {}
         };
 
@@ -680,6 +684,76 @@ namespace iDynTree {
             if (!(m_pimpl->ocproblem->dynamicalSystem().lock()->setInitialState(initialState))){
                 reportError("MultipleShootingTranscription", "setInitialState", "Error while setting the initial state to the dynamical system.");
                 return false;
+            }
+
+            return true;
+        }
+
+        bool MultipleShootingTranscription::getTimings(std::vector<double> &stateEvaluations, std::vector<double> &controlEvaluations)
+        {
+            if (!(m_pimpl->prepared)){
+                reportError("MultipleShootingTranscription", "getTimings", "First you need to call the prepare method");
+                return false;
+            }
+
+            if (stateEvaluations.size() != (m_pimpl->totalMeshes - 1))
+                stateEvaluations.resize(m_pimpl->totalMeshes - 1);
+
+            if (controlEvaluations.size() != m_pimpl->controlMeshes)
+                controlEvaluations.resize(m_pimpl->controlMeshes);
+
+            size_t stateIndex = 0, controlIndex = 0;
+
+            MeshPointOrigin first = MeshPointOrigin::FirstPoint();
+
+            for (auto mesh = m_pimpl->meshPoints.begin(); mesh != m_pimpl->meshPointsEnd; ++mesh){
+                if (mesh->origin != first){
+                    stateEvaluations[stateIndex] = mesh->time;
+                    stateIndex++;
+                }
+                if (mesh->type == MeshPointType::Control){
+                    controlEvaluations[controlIndex] = mesh->time;
+                    controlIndex++;
+                }
+            }
+
+            return true;
+        }
+
+        bool MultipleShootingTranscription::getSolution(std::vector<VectorDynSize> &states, std::vector<VectorDynSize> &controls)
+        {
+            if (!(m_pimpl->solved)){
+                reportError("MultipleShootingTranscription", "getSolution", "First you need to solve the problem once.");
+                return false;
+            }
+
+            if (states.size() != (m_pimpl->totalMeshes - 1))
+                states.resize((m_pimpl->totalMeshes - 1));
+
+            if (controls.size() != m_pimpl->controlMeshes)
+                controls.resize(m_pimpl->controlMeshes);
+
+            Eigen::Map<Eigen::VectorXd> solutionMap = toEigen(m_pimpl->solution);
+
+            size_t stateIndex = 0, controlIndex = 0;
+
+            MeshPointOrigin first = MeshPointOrigin::FirstPoint();
+
+            for (auto mesh = m_pimpl->meshPoints.begin(); mesh != m_pimpl->meshPointsEnd; ++mesh){
+                if (mesh->origin != first){
+                    if (states[stateIndex].size() !=  m_pimpl->nx)
+                        states[stateIndex].resize(m_pimpl->nx);
+
+                    toEigen(states[stateIndex]) = solutionMap.segment(mesh->stateIndex, m_pimpl->nx);
+                    stateIndex++;
+                }
+                if (mesh->type == MeshPointType::Control){
+                    if (controls[controlIndex].size() !=  m_pimpl->nu)
+                        controls[controlIndex].resize(m_pimpl->nu);
+
+                    toEigen(controls[controlIndex]) = solutionMap.segment(mesh->controlIndex, m_pimpl->nu);
+                    controlIndex++;
+                }
             }
 
             return true;
@@ -1404,6 +1478,15 @@ namespace iDynTree {
             return true;
         }
 
+        bool MultipleShootingTranscription::evaluateConstraintsHessian(const VectorDynSize &constraintsMultipliers, MatrixDynSize &hessian)
+        {
+            if (!(toEigen(constraintsMultipliers).isZero(0))){
+                reportWarning("MultipleShootingTranscription", "evaluateConstraintsHessian", "The constraints hessian is currently unavailable.");
+            }
+            hessian.zero();
+            return true;
+        }
+
 
         // MARK: Class implementation
 
@@ -1466,15 +1549,9 @@ namespace iDynTree {
             return m_transcription->setInitialState(initialState);
         }
 
-
-        void MultipleShootingSolver::setInitialGuess(const iDynTree::VectorDynSize& initialGuess)
+        bool MultipleShootingSolver::getTimings(std::vector<double> &stateEvaluations, std::vector<double> &controlEvaluations)
         {
-
-        }
-
-        const iDynTree::VectorDynSize& MultipleShootingSolver::lastSolution()
-        {
-
+            return m_transcription->getTimings(stateEvaluations, controlEvaluations);
         }
 
         bool MultipleShootingSolver::initialize()
@@ -1488,7 +1565,26 @@ namespace iDynTree {
 
         bool MultipleShootingSolver::solve()
         {
-            return false;
+            if (!m_optimizer){
+                reportError("MultipleShootingSolver", "solve", "No optimizer selected.");
+                return false;
+            }
+            if (m_optimizer->solve()){
+                if (!(m_optimizer->getPrimalVariables(m_transcription->m_pimpl->solution))){
+                    reportError("MultipleShootingSolver", "solve", "Error while retrieving the primal variables from the optimizer.");
+                    return false;
+                }
+            } else {
+                reportError("MultipleShootingSolver", "solve", "Error when calling the optimizer solve method.");
+                return false;
+            }
+            m_transcription->m_pimpl->solved = true;
+            return true;
+        }
+
+        bool MultipleShootingSolver::getSolution(std::vector<VectorDynSize> &states, std::vector<VectorDynSize> &controls)
+        {
+            return m_transcription->getSolution(states, controls);
         }
     }
 }
