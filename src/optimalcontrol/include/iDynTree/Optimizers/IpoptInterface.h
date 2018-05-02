@@ -14,6 +14,7 @@
 #define IDYNTREE_OPTIMALCONTROL_IPOPTINTERFACE_H
 
 #include <memory>
+#include <string>
 #include <iDynTree/Optimizer.h>
 
 namespace iDynTree {
@@ -40,19 +41,31 @@ namespace iDynTree {
 
             virtual ~IpoptInterface();
 
-            virtual bool setProblem(std::shared_ptr<OptimizationProblem> problem);
+            virtual bool setProblem(std::shared_ptr<OptimizationProblem> problem) final;
 
-//            virtual bool solve() = 0; //warm start capabilities should be implemented in the solver specific interface
+            virtual bool setInitialGuess(VectorDynSize &initialGuess) final;
 
-//            virtual bool getPrimalVariables(VectorDynSize &primalVariables);
+            virtual bool solve() final;
 
-//            virtual bool getDualVariables(VectorDynSize &dualVariables);
+            virtual bool getPrimalVariables(VectorDynSize &primalVariables) final;
 
-//            virtual bool getOptimalCost(double &optimalCost);
+            virtual bool getDualVariables(VectorDynSize &constraintsMultipliers,
+                                          VectorDynSize &lowerBoundsMultipliers,
+                                          VectorDynSize &upperBoundsMultipliers) final;
+
+            virtual bool getOptimalCost(double &optimalCost) final;
+
+            virtual bool getOptimalConstraintsValues(VectorDynSize &constraintsValues) final;
 
             virtual double minusInfinity() final;
 
             virtual double plusInfinity() final;
+
+            bool setIpoptOption(std::string &tag, std::string &value); //TO BE IMPLEMENTED
+
+            bool setIpoptOption(std::string &tag, double &value);
+
+            bool setIpoptOption(std::string &tag, int &value);
         };
 
     }

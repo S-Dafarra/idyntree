@@ -43,7 +43,9 @@ namespace iDynTree {
 
             virtual unsigned int numberOfVariables() = 0;
 
-            virtual bool getConstraintsInfo(unsigned int& numberOfConstraints, VectorDynSize& constraintsLowerBounds, VectorDynSize& constraintsUpperBounds);
+            virtual unsigned int numberOfConstraints() = 0;
+
+            virtual bool getConstraintsBounds(VectorDynSize& constraintsLowerBounds, VectorDynSize& constraintsUpperBounds);
 
             virtual bool getVariablesUpperBound(VectorDynSize& variablesUpperBound); //return false if not upper bounded
 

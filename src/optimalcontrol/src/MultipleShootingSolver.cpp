@@ -1011,22 +1011,23 @@ namespace iDynTree {
             return static_cast<unsigned int>(m_pimpl->numberOfVariables);
         }
 
-        bool MultipleShootingTranscription::getConstraintsInfo(unsigned int &numberOfConstraints,
-                                                               VectorDynSize &constraintsLowerBounds,
-                                                               VectorDynSize &constraintsUpperBounds)
+        unsigned int MultipleShootingTranscription::numberOfConstraints()
+        {
+            return static_cast<unsigned int>(m_pimpl->numberOfConstraints);
+        }
+
+        bool MultipleShootingTranscription::getConstraintsBounds(VectorDynSize &constraintsLowerBounds, VectorDynSize &constraintsUpperBounds)
         {
             if (!(m_pimpl->prepared)){
                 reportError("MultipleShootingTranscription", "getConstraintsInfo", "First you need to call the prepare method");
                 return false;
             }
 
-            numberOfConstraints = static_cast<unsigned int>(m_pimpl->numberOfConstraints);
+            if (constraintsLowerBounds.size() != numberOfConstraints())
+                constraintsLowerBounds.resize(numberOfConstraints());
 
-            if (constraintsLowerBounds.size() != numberOfConstraints)
-                constraintsLowerBounds.resize(numberOfConstraints);
-
-            if (constraintsUpperBounds.size() != numberOfConstraints)
-                constraintsUpperBounds.resize(numberOfConstraints);
+            if (constraintsUpperBounds.size() != numberOfConstraints())
+                constraintsUpperBounds.resize(numberOfConstraints());
 
             constraintsLowerBounds = m_pimpl->constraintsLowerBound;
             constraintsUpperBounds = m_pimpl->constraintsUpperBound;
