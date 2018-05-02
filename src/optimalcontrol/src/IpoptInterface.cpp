@@ -607,6 +607,36 @@ namespace iDynTree {
             return static_cast<double>(output);
         }
 
+        bool IpoptInterface::setIpoptOption(const std::string &tag, const std::string &value)
+        {
+            return m_pimpl->loader->Options()->SetStringValue(tag, value);
+        }
+
+        bool IpoptInterface::setIpoptOption(const std::string &tag, double value)
+        {
+            return m_pimpl->loader->Options()->SetNumericValue(tag, value);
+        }
+
+        bool IpoptInterface::setIpoptOption(const std::string &tag, int value)
+        {
+            return m_pimpl->loader->Options()->SetIntegerValue(tag, value);
+        }
+
+        bool IpoptInterface::getIpoptOption(const std::string &tag, std::string &value)
+        {
+            return m_pimpl->loader->Options()->GetStringValue(tag, value, "");
+        }
+
+        bool IpoptInterface::getIpoptOption(const std::string &tag, double &value)
+        {
+            return m_pimpl->loader->Options()->GetNumericValue(tag, value, "");
+        }
+
+        bool IpoptInterface::getIpoptOption(const std::string &tag, int &value)
+        {
+            return m_pimpl->loader->Options()->GetIntegerValue(tag, value, "");
+        }
+
 
     }
 }

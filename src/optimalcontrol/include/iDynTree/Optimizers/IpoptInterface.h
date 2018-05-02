@@ -39,33 +39,39 @@ namespace iDynTree {
 
             IpoptInterface(const IpoptInterface &other) = delete;
 
-            virtual ~IpoptInterface();
+            virtual ~IpoptInterface() override;
 
-            virtual bool setProblem(std::shared_ptr<OptimizationProblem> problem) final;
+            virtual bool setProblem(std::shared_ptr<OptimizationProblem> problem) override;
 
-            virtual bool setInitialGuess(VectorDynSize &initialGuess) final;
+            virtual bool setInitialGuess(VectorDynSize &initialGuess) override;
 
-            virtual bool solve() final;
+            virtual bool solve() override;
 
-            virtual bool getPrimalVariables(VectorDynSize &primalVariables) final;
+            virtual bool getPrimalVariables(VectorDynSize &primalVariables) override;
 
             virtual bool getDualVariables(VectorDynSize &constraintsMultipliers,
                                           VectorDynSize &lowerBoundsMultipliers,
-                                          VectorDynSize &upperBoundsMultipliers) final;
+                                          VectorDynSize &upperBoundsMultipliers) override;
 
-            virtual bool getOptimalCost(double &optimalCost) final;
+            virtual bool getOptimalCost(double &optimalCost) override;
 
-            virtual bool getOptimalConstraintsValues(VectorDynSize &constraintsValues) final;
+            virtual bool getOptimalConstraintsValues(VectorDynSize &constraintsValues) override;
 
-            virtual double minusInfinity() final;
+            virtual double minusInfinity() override;
 
-            virtual double plusInfinity() final;
+            virtual double plusInfinity() override;
 
-            bool setIpoptOption(std::string &tag, std::string &value); //TO BE IMPLEMENTED
+            bool setIpoptOption(const std::string &tag, const std::string &value);
 
-            bool setIpoptOption(std::string &tag, double &value);
+            bool setIpoptOption(const std::string &tag, double value);
 
-            bool setIpoptOption(std::string &tag, int &value);
+            bool setIpoptOption(const std::string &tag, int value);
+
+            bool getIpoptOption(const std::string &tag, std::string &value);
+
+            bool getIpoptOption(const std::string &tag, double &value);
+
+            bool getIpoptOption(const std::string &tag, int &value);
         };
 
     }
