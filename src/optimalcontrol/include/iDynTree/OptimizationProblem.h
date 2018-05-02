@@ -51,7 +51,7 @@ namespace iDynTree {
 
             virtual bool getConstraintsJacobianInfo(std::vector<size_t>& nonZeroElementRows, std::vector<size_t>& nonZeroElementColumns);
 
-            virtual bool getHessianInfo(std::vector<size_t>& nonZeroElementRows, std::vector<size_t>& nonZeroElementColumns);
+            virtual bool getHessianInfo(std::vector<size_t>& nonZeroElementRows, std::vector<size_t>& nonZeroElementColumns); //costs and constraints together
 
            /* virtual bool getStartingPoint(VectorDynSize& variablesGuess,
                                           VectorDynSize& lowerBoundsMultipliersGuess,

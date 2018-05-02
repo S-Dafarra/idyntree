@@ -14,10 +14,11 @@
 #define IDYNTREE_OPTIMALCONTROL_OPTIMIZER_H
 
 #include <memory>
-#include <iDynTree/Core/VectorDynSize.h>
 #include <iDynTree/OptimizationProblem.h>
 
 namespace iDynTree {
+
+    class VectorDynSize;
 
     namespace optimization {
 

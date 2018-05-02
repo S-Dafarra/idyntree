@@ -1123,8 +1123,17 @@ namespace iDynTree {
                 return false;
             }
 
-            nonZeroElementRows = m_pimpl->jacobianNZRows;
-            nonZeroElementColumns = m_pimpl->jacobianNZCols;
+            if (nonZeroElementRows.size() != m_pimpl->jacobianNonZeros)
+                nonZeroElementRows.resize(static_cast<unsigned int>(m_pimpl->jacobianNonZeros));
+
+            if (nonZeroElementColumns.size() != m_pimpl->jacobianNonZeros)
+                nonZeroElementColumns.resize(static_cast<unsigned int>(m_pimpl->jacobianNonZeros));
+
+
+            for (unsigned int i = 0; i < m_pimpl->jacobianNonZeros; ++i){
+                nonZeroElementRows[i] = m_pimpl->jacobianNZRows[i];
+                nonZeroElementColumns[i] = m_pimpl->jacobianNZCols[i];
+            }
 
             return true;
         }
@@ -1136,8 +1145,16 @@ namespace iDynTree {
                 return false;
             }
 
-            nonZeroElementRows = m_pimpl->hessianNZRows;
-            nonZeroElementColumns = m_pimpl->hessianNZCols;
+            if (nonZeroElementRows.size() != m_pimpl->hessianNonZeros)
+                nonZeroElementRows.resize(static_cast<unsigned int>(m_pimpl->hessianNonZeros));
+
+            if (nonZeroElementColumns.size() != m_pimpl->hessianNonZeros)
+                nonZeroElementColumns.resize(static_cast<unsigned int>(m_pimpl->hessianNonZeros));
+
+            for (unsigned int i = 0; i < m_pimpl->hessianNonZeros; ++i){
+                nonZeroElementRows[i] = m_pimpl->hessianNZRows[i];
+                nonZeroElementColumns[i] = m_pimpl->hessianNZCols[i];
+            }
 
             return true;
         }
