@@ -123,12 +123,67 @@ void checkMeanRotation()
 
 }
 
+void checkRunningMean()
+{
+    size_t numberOfRotations = 2;
+    double perturbation = M_PI * 0.1;
+    std::vector<iDynTree::Rotation> rotations;
+    std::vector<double> weights;
+    iDynTree::GeodesicL2RunningMeanRotation runningMean;
+    iDynTree::GeodesicL2MeanOptions options;
+    options.verbose = true;
+    options.maxIterations = 1000;
+    options.stepSize = 1.0;
+    options.tolerance = 1e-15;
+    bool ok = runningMean.setOptions(options);
+
+    ASSERT_IS_TRUE(ok);
+
+    double originalRoll, originalPitch, originalYaw;
+    rotations.push_back(iDynTree::getRandomRotation());
+    rotations.back().getRPY(originalRoll, originalPitch, originalYaw);
+    weights.push_back(iDynTree::getRandomDouble());
+    ok = runningMean.addRotation(rotations.back(), weights.back());
+    ASSERT_IS_TRUE(ok);
+
+    for (size_t i = 1; i < numberOfRotations; ++i)
+    {
+        rotations.push_back(iDynTree::Rotation::RPY(originalRoll + iDynTree::getRandomDouble(-0.5 * perturbation, 0.5 * perturbation),
+                                                    originalPitch + iDynTree::getRandomDouble(-0.5 * perturbation, 0.5 * perturbation),
+                                                    originalYaw + iDynTree::getRandomDouble(-0.5 * perturbation, 0.5 * perturbation)));
+        weights.push_back(iDynTree::getRandomDouble());
+        ok = runningMean.addRotation(rotations.back(), weights.back());
+        ASSERT_IS_TRUE(ok);
+    }
+    double totalWeight = std::accumulate(weights.begin(), weights.end(), 0.0);
+
+    ASSERT_EQUAL_DOUBLE(numberOfRotations, runningMean.numberOfAddedRotations());
+
+    iDynTree::Rotation weightedMean = runningMean.getMeanRotation();
+
+    Eigen::Vector3d r;
+    r.setZero();
+
+    for (size_t idx = 0; idx < numberOfRotations; ++idx)
+    {
+        const iDynTree::Rotation& R_i = rotations[idx];
+        double w_i = weights[idx];
+        r =  r + w_i * toEigen((weightedMean.inverse() * R_i).log());
+    }
+    r = r * (1.0 / totalWeight);
+
+    std::cerr << "Error norm: " << r.norm() << std::endl;
+
+    ASSERT_IS_TRUE(r.norm() < 1e-6);
+}
+
 int main()
 {
 
     checkGeodesicDistance();
     checkWeightedMeanRotation();
     checkMeanRotation();
+    checkRunningMean();
 
     return EXIT_SUCCESS;
 }

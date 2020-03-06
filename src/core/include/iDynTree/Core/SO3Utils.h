@@ -73,6 +73,26 @@ namespace iDynTree
                                          const std::vector<double>& weights,
                                          iDynTree::Rotation& meanRotation,
                                          const GeodesicL2MeanOptions& options = GeodesicL2MeanOptions());
+
+    class GeodesicL2RunningMeanRotation
+    {
+        GeodesicL2MeanOptions m_options;
+        iDynTree::Rotation m_meanRotation{iDynTree::Rotation::Identity()};
+        double m_sumOfWeights{0.0};
+        size_t m_numberOfRotations{0};
+
+    public:
+
+        bool setOptions(const GeodesicL2MeanOptions& options);
+
+        bool addRotation(const iDynTree::Rotation& rotation, double weight = 1.0);
+
+        const iDynTree::Rotation& getMeanRotation() const;
+
+        size_t numberOfAddedRotations() const;
+
+        void clear();
+    };
 }
 
 #endif // IDYNTREE_SO3UTILS_H

@@ -171,3 +171,138 @@ bool iDynTree::geodesicL2WeightedMeanRotation(const std::vector<iDynTree::Rotati
 
     return true;
 }
+
+bool iDynTree::GeodesicL2RunningMeanRotation::setOptions(const iDynTree::GeodesicL2MeanOptions &options)
+{
+    if (options.tolerance < 0.0)
+    {
+        iDynTree::reportError("SO3Utils", "geodesicL2WeightedMeanRotation", "The tolerance is supposed to be a positive number.");
+        return false;
+    }
+
+    if (options.stepSize < 0.0)
+    {
+        iDynTree::reportError("SO3Utils", "geodesicL2WeightedMeanRotation", "The stepSize is supposed to be non-negative.");
+        return false;
+    }
+    m_options = options;
+    return true;
+}
+
+bool iDynTree::GeodesicL2RunningMeanRotation::addRotation(const iDynTree::Rotation &rotation, double weight)
+{
+    if (weight < 0.0)
+    {
+        iDynTree::reportError("SO3Utils", "GeodesicL2RunningMeanRotation::addRotation", "The weight is supposed to be non-negative.");
+        return false;
+    }
+
+    m_numberOfRotations++;
+    m_sumOfWeights += weight;
+
+    if (m_numberOfRotations == 1)
+    {
+        m_meanRotation = rotation;
+
+        if (m_options.verbose)
+        {
+            iDynTree::reportInfo("SO3Utils", "GeodesicL2RunningMeanRotation::addRotation", "Mean rotation initialized to the first value." );
+        }
+
+        return true;
+    }
+
+    iDynTree::Rotation previousMean, meanRotation;
+
+    previousMean = m_meanRotation;
+    meanRotation = m_meanRotation;
+
+    bool optimal_R_found{false};
+    auto start = std::chrono::high_resolution_clock::now();
+    int iteration = 1;
+    while (!optimal_R_found)
+    {
+        // Riemannian gradient descent with constant step size
+        iDynTree::AngularMotionVector3 perturbation;
+        perturbation.zero();
+        Eigen::Map<Eigen::Vector3d> r(toEigen(perturbation));
+
+        r = toEigen((meanRotation.inverse() * previousMean).log()) +
+            (weight / m_sumOfWeights) * (toEigen((meanRotation.inverse() * rotation).log()) - toEigen((meanRotation.inverse() * previousMean).log()));
+
+        double norm = r.norm();
+
+        if (std::isinf(norm))
+        {
+            iDynTree::reportError("SO3Utils", "addRotation", "Inf detected.");
+            return false;
+        }
+
+        if (std::isnan(norm))
+        {
+            iDynTree::reportError("SO3Utils", "addRotation", "Nan detected.");
+            return false;
+        }
+
+        if (norm <= m_options.tolerance)
+        {
+            optimal_R_found = true;
+            continue;
+        }
+
+        r *= m_options.stepSize;
+        meanRotation = meanRotation * perturbation.exp();
+
+        auto now = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> timout_check = now - start;
+        double time_lapsed{timout_check.count()};
+
+        if ((m_options.timeoutInSeconds > 0.0) && (time_lapsed > m_options.timeoutInSeconds))
+        {
+            iDynTree::reportError("SO3Utils", "GeodesicL2RunningMeanRotation::addRotation", "Timeout reached, optimal mean not found.");
+            m_numberOfRotations--;
+            m_sumOfWeights -= weight;
+            return false;
+        }
+
+        if ((m_options.maxIterations > 0) && (iteration >= m_options.maxIterations))
+        {
+            iDynTree::reportError("SO3Utils", "geodesicL2WeightedMeanRotation", "Maximum iteration reached, optimal mean not found.");
+            return false;
+        }
+
+        iteration++;
+    }
+
+    m_meanRotation = meanRotation;
+    auto finish = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> elapsed = finish - start;
+    std::stringstream ss;
+    ss << "Optimization took " << elapsed.count() << " seconds in " << iteration << " iterations.";
+
+    if (m_options.verbose)
+    {
+        iDynTree::reportInfo("SO3Utils", "GeodesicL2RunningMeanRotation::addRotation", ss.str().c_str());
+    }
+
+    return true;
+
+}
+
+const iDynTree::Rotation &iDynTree::GeodesicL2RunningMeanRotation::getMeanRotation() const
+{
+    return m_meanRotation;
+}
+
+size_t iDynTree::GeodesicL2RunningMeanRotation::numberOfAddedRotations() const
+{
+    return m_numberOfRotations;
+}
+
+void iDynTree::GeodesicL2RunningMeanRotation::clear()
+{
+    m_meanRotation = iDynTree::Rotation::Identity();
+    m_sumOfWeights = 0.0;
+    m_numberOfRotations = 0;
+}
